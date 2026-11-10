@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d1017" />
+    <title>Sinfonia de Motores</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.mjs"></script>
+  </head>
+  <body>
+    <main class="lab">
+      <header>
+        <span class="eyebrow">LABORATÓRIO DE MOTORES DE PASSO VIRTUAIS</span>
+        <h1>Sinfonia de Motores</h1>
+        <p>Cada motor toca uma nota por vez, acionado por pulsos. Cole um link do YouTube para transcrever a música e arranjá-la para os motores (melodia, harmonia e baixo), ou use uma das demonstrações.</p>
+      </header>
+
+      <section class="panel source" aria-label="Fonte da música">
+        <form id="link-form" novalidate>
+          <label for="video-url">Música do YouTube</label>
+          <div class="input-row">
+            <input id="video-url" type="url" inputmode="url" autocomplete="url" placeholder="https://www.youtube.com/watch?v=..." />
+            <button id="load-button" type="submit">Transcrever</button>
+          </div>
+        </form>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <div class="sources" role="group" aria-label="Partitura">
+          <span>Tocar:</span>
+          <button type="button" class="chip" data-source="scale">Escala</button>
+          <button type="button" class="chip" data-source="chords">Acordes</button>
+          <button type="button" class="chip" data-source="original">Engrenagens</button>
+          <button type="button" class="chip" data-source="youtube" id="youtube-chip" hidden></button>
+        </div>
+        <div id="youtube-controls" class="youtube-controls" hidden>
+          <label title="Linhas: cada motor pega a melhor linha de notas que sobrou. Papéis: melodia, harmonia e baixo por regra.">Distribuição
+            <select id="method">
+              <option value="linhas">Linhas dinâmicas</option>
+              <option value="papeis">Papéis (melodia/harmonia/baixo)</option>
+            </select></label>
+          <label id="density-label" title="Quantas notas fracas a transcrição aceita. Mais densidade = mais material para os motores extras.">Densidade de notas
+            <select id="density">
+              <option value="normal">Normal</option>
+              <option value="media" selected>Média</option>
+              <option value="alta">Alta</option>
+            </select></label>
+          <label class="check"><input id="percussion" type="checkbox" checked /> Motor de percussão</label>
+          <span id="line-options" class="line-options">
+            <label class="check" title="A nota segue a curva fina de afinação do transcritor: vibrato e deslizes entre notas."><input id="bends" type="checkbox" /> Vibrato e deslizes</label>
+            <label class="check" title="As linhas extras tocam mais baixo, na proporção da importância delas, para não embolar a melodia."><input id="mix" type="checkbox" /> Volume por importância</label>
+          </span>
+          <label id="threshold-label" hidden title="Notas mais fracas que isso são ignoradas. Mais alto = arranjo mais limpo e esparso.">Intensidade mínima das notas
+            <input id="threshold" type="range" min="0.15" max="0.65" step="0.01" value="0.3" />
+            <output id="threshold-value"></output></label>
+          <label>Áudio original (para comparar)
+            <input id="original-level" type="range" min="0" max="1" step="0.01" value="0" /></label>
+        </div>
+      </section>
+
+      <section class="panel transport" aria-label="Reprodução">
+        <button id="play" type="button" class="play">▶ Tocar</button>
+        <label class="check"><input id="loop" type="checkbox" checked /> Repetir</label>
+        <label class="inline">Andamento <input id="rate" type="range" min="0.25" max="2" step="0.05" value="1" /> <output id="rate-value">100%</output></label>
+        <div class="segmented" role="radiogroup" aria-label="Modelo de síntese">
+          <button type="button" data-model="ideal" role="radio">A · Ideal (senoide)</button>
+          <button type="button" data-model="mech" role="radio" class="on">B · Mecânico</button>
+        </div>
+        <label class="inline">Volume <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" /></label>
+        <span id="clock" class="clock">0:00.0</span>
+      </section>
+
+      <section class="panel" aria-labelledby="motors-title">
+        <div class="panel-head">
+          <h2 id="motors-title">Motores</h2>
+          <div class="actions">
+            <button type="button" id="chord" class="secondary">Acorde de Lá maior</button>
+            <button type="button" id="silence" class="secondary">Soltar notas</button>
+            <button type="button" id="add-motor" class="secondary">+ Motor</button>
+          </div>
+        </div>
+        <div id="motor-grid" class="motor-grid"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="seq-title">
+        <div class="panel-head">
+          <h2 id="seq-title">Sequenciador</h2>
+          <span id="score-info" class="muted"></span>
+        </div>
+        <canvas id="roll" class="roll" aria-label="Rolo de notas por motor"></canvas>
+        <details id="editor">
+          <summary>Editar partitura</summary>
+          <p class="muted">Uma linha por motor. <code>A4</code> nota de 1 tempo, <code>C#5:0.5</code> meio tempo, <code>-:2</code> pausa de 2 tempos, <code>@0.5</code> muda a duração padrão, <code>v0.6</code> muda a intensidade, <code>|</code> separa compassos, <code>#</code> no início da linha é comentário.</p>
+          <textarea id="score-text" rows="7" spellcheck="false"></textarea>
+          <div class="editor-row">
+            <label class="inline">BPM <input id="bpm" type="number" min="20" max="400" value="120" /></label>
+            <button type="button" id="apply-score">Usar esta partitura</button>
+            <span id="score-error" class="error" role="alert"></span>
+          </div>
+        </details>
+      </section>
+
+      <section class="charts" aria-label="Visualização">
+        <figure class="panel"><figcaption><b>1 · Ondas individuais</b> sᵢ(t) na saída de cada motor</figcaption><canvas id="voices"></canvas></figure>
+        <figure class="panel"><figcaption><b>2 · Superposição</b> soma das ondas, com as parcelas ao fundo</figcaption><canvas id="sum"></canvas></figure>
+        <figure class="panel"><figcaption><b>3 · Espectro (FFT)</b> linhas tracejadas = notas comandadas</figcaption><canvas id="spectrum"></canvas></figure>
+        <figure class="panel"><figcaption><b>4 · Dinâmica mecânica</b> passos/s comandados × simulados</figcaption><canvas id="dynamics"></canvas></figure>
+      </section>
+
+      <section class="panel" aria-labelledby="physics-title">
+        <div class="panel-head">
+          <h2 id="physics-title">Configurações físicas</h2>
+          <button type="button" id="reset-physics" class="secondary">Restaurar padrão</button>
+        </div>
+        <div id="physics" class="physics"></div>
+        <p id="formula" class="formula"></p>
+        <p class="muted">Físico: RPM a partir dos pulsos, limites de velocidade do motor e de pulsos do driver, amplificação de um oscilador amortecido. Aproximações: resposta de 1ª ordem com aceleração máxima, perda de passos perto da ressonância, timbre (forma de onda dos passos, ruído, desbalanceamento). Veja o README.</p>
+      </section>
+    </main>
+  </body>
+</html>
