@@ -179,7 +179,23 @@ export function drawDynamics(canvas, motors, now, physics, span = 4) {
 }
 
 // Sequenciador: rolo de piano por motor, com a janela andando junto do tempo.
-export function drawRoll(canvas, score, songTime, motorCount, seconds = 10) {
+// Escurece o que fica fora do trecho selecionado [a, b] e marca as bordas.
+function shadeRegion(ctx, region, x, w, h) {
+  if (!region) return;
+  const xa = x(region.start), xb = x(region.end);
+  ctx.fillStyle = 'rgba(5,8,14,.62)';
+  if (xa > 0) ctx.fillRect(0, 0, Math.min(w, xa), h);
+  if (xb < w) ctx.fillRect(Math.max(0, xb), 0, w - Math.max(0, xb), h);
+  ctx.strokeStyle = '#78dcff';
+  ctx.lineWidth = 1.5;
+  for (const edge of [xa, xb]) {
+    if (edge < 0 || edge > w) continue;
+    ctx.beginPath(); ctx.moveTo(edge, 0); ctx.lineTo(edge, h); ctx.stroke();
+  }
+}
+
+// focus: onde a janela fica com a música parada (o ponto de partida escolhido).
+export function drawRoll(canvas, score, songTime, motorCount, region = null, focus = null, seconds = 10) {
   const { ctx, w, h } = prepare(canvas);
   if (!score) {
     axisLabel(ctx, 'Escolha uma demonstração ou uma música do YouTube.', w / 2, h / 2, 'center');
@@ -187,7 +203,7 @@ export function drawRoll(canvas, score, songTime, motorCount, seconds = 10) {
   }
   const lanes = Math.max(score.tracks.length, motorCount);
   const lane = h / lanes;
-  const t0 = Math.max(0, (songTime ?? 0) - seconds * 0.25);
+  const t0 = Math.max(0, (songTime ?? focus ?? 0) - seconds * 0.25);
   const x = (t) => ((t - t0) / seconds) * w;
   for (let i = 0; i < lanes; i++) {
     const track = score.tracks[i] ?? [];
@@ -212,6 +228,7 @@ export function drawRoll(canvas, score, songTime, motorCount, seconds = 10) {
     const role = score.roles?.[i] ? ` · ${score.roles[i]}` : '';
     axisLabel(ctx, missing ? `voz ${i + 1} (sem motor)` : `M${i + 1}${role}`, 4, i * lane + 13);
   }
+  shadeRegion(ctx, region, x, w, h);
   if (songTime !== null) {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
@@ -219,3 +236,50 @@ export function drawRoll(canvas, score, songTime, motorCount, seconds = 10) {
   }
 }
 
+
+// Visão geral da música inteira, para escolher o trecho. As notas são desenhadas uma
+// vez numa imagem por partitura e tamanho; a cada quadro só entram seleção e cursor.
+const overviews = new WeakMap();
+
+function overview(score, motorCount, w, h, dpr) {
+  const key = `${w}x${h}@${dpr}:${motorCount}`;
+  const cached = overviews.get(score);
+  if (cached?.key === key) return cached.image;
+  const image = document.createElement('canvas');
+  image.width = Math.round(w * dpr);
+  image.height = Math.round(h * dpr);
+  const ctx = image.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const lanes = Math.max(1, score.tracks.length), lane = h / lanes;
+  score.tracks.forEach((track, i) => {
+    if (!track.length) return;
+    const midis = track.map((n) => n.midi);
+    const low = Math.min(...midis), span = Math.max(...midis) - low + 1;
+    ctx.fillStyle = i >= motorCount ? 'rgba(140,150,170,.35)' : COLORS[i % COLORS.length];
+    for (const note of track) {
+      const y = i * lane + 1 + (1 - (note.midi - low + 1) / span) * Math.max(1, lane - 3);
+      ctx.globalAlpha = 0.35 + 0.65 * note.vel;
+      ctx.fillRect((note.start / score.duration) * w, y, Math.max(1, ((note.end - note.start) / score.duration) * w), Math.max(1.5, lane / 8));
+    }
+  });
+  overviews.set(score, { key, image });
+  return image;
+}
+
+export function drawTimeline(canvas, score, songTime, motorCount, region, cursor) {
+  const { ctx, w, h } = prepare(canvas);
+  if (!score) return;
+  ctx.drawImage(overview(score, motorCount, w, h, window.devicePixelRatio || 1), 0, 0, w, h);
+  const x = (t) => (t / score.duration) * w;
+  shadeRegion(ctx, region, x, w, h);
+  if (region) {
+    ctx.fillStyle = 'rgba(120,220,255,.12)';
+    ctx.fillRect(x(region.start), 0, x(region.end) - x(region.start), h);
+  }
+  const at = songTime ?? cursor;
+  if (at != null) {
+    ctx.strokeStyle = songTime === null ? 'rgba(255,255,255,.55)' : '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x(at), 0); ctx.lineTo(x(at), h); ctx.stroke();
+  }
+}

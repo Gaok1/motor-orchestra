@@ -2,10 +2,13 @@
 
 import errno
 import json
+import math
+import os
 import re
 import shutil
 import subprocess
 import threading
+import tempfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
@@ -15,7 +18,7 @@ DOWNLOADS = ROOT / "downloads"
 # Reaproveita os WAVs já baixados pelo PyMusicLooper, se existirem ao lado.
 LOOPER_DOWNLOADS = ROOT.parent / "PyMusicLooper" / "downloads"
 VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
-ANALYSIS_VERSION = 8
+ANALYSIS_VERSION = 10
 PORT = 8001
 JOBS = {}
 JOBS_LOCK = threading.Lock()
@@ -24,6 +27,7 @@ STATIC = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/app.mjs": ("app.mjs", "text/javascript; charset=utf-8"),
     "/engine.mjs": ("engine.mjs", "text/javascript; charset=utf-8"),
+    "/bells.mjs": ("bells.mjs", "text/javascript; charset=utf-8"),
     "/score.mjs": ("score.mjs", "text/javascript; charset=utf-8"),
     "/charts.mjs": ("charts.mjs", "text/javascript; charset=utf-8"),
     "/physics.mjs": ("physics.mjs", "text/javascript; charset=utf-8"),
@@ -67,7 +71,9 @@ def download(video_id, folder, wav_path):
 
     cached = LOOPER_DOWNLOADS / video_id
     if (cached / "audio.wav").exists():
-        shutil.copy(cached / "audio.wav", wav_path)
+        temporary_wav = folder / "audio.tmp.wav"
+        shutil.copy(cached / "audio.wav", temporary_wav)
+        temporary_wav.replace(wav_path)
         if (cached / "title.txt").exists():
             shutil.copy(cached / "title.txt", folder / "title.txt")
         return
@@ -109,9 +115,9 @@ def download(video_id, folder, wav_path):
 
 def process_job(video_id):
     folder = DOWNLOADS / video_id
-    folder.mkdir(parents=True, exist_ok=True)
     wav_path = folder / "audio.wav"
     try:
+        folder.mkdir(parents=True, exist_ok=True)
         if not wav_path.exists():
             download(video_id, folder, wav_path)
         title_file = folder / "title.txt"
@@ -130,19 +136,67 @@ def process_job(video_id):
             **notes,
             "drums": detect_drums(wav_path),
         }
-        (folder / "notes.json").write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+        write_result(folder / "notes.json", result)
         set_job(video_id, **result)
     except Exception as error:
         detail = str(error).strip() or type(error).__name__
         set_job(video_id, status="error", error=detail[-500:])
 
 
+def write_result(path, result):
+    """Publica só JSON completo; uma falha preserva o cache anterior."""
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix="notes-", suffix=".tmp", delete=False) as file:
+            temporary = Path(file.name)
+            json.dump(result, file, ensure_ascii=False, allow_nan=False)
+            file.flush()
+            os.fsync(file.fileno())
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def valid_result(data, video_id):
+    def number(value):
+        return type(value) in (int, float) and math.isfinite(value)
+
+    def notes(value):
+        return isinstance(value, list) and all(
+            isinstance(n, list) and len(n) in (4, 5)
+            and all(number(v) for v in n[:4])
+            and 0 <= n[0] < n[1] and 0 <= n[2] <= 127 and 0 <= n[3] <= 1
+            and (len(n) == 4 or n[4] is None
+                 or isinstance(n[4], list) and all(number(v) for v in n[4]))
+            for n in value
+        )
+
+    return (
+        isinstance(data, dict) and data.get("analysis_version") == ANALYSIS_VERSION
+        and data.get("id") == video_id and data.get("status") == "ready"
+        and isinstance(data.get("title"), str)
+        and number(data.get("duration")) and data["duration"] > 0
+        and notes(data.get("notes"))
+        and isinstance(data.get("density"), dict)
+        and all(notes(data["density"].get(key)) for key in ("media", "alta"))
+        and isinstance(data.get("drums"), list)
+        and all(isinstance(d, list) and len(d) == 3
+                and number(d[0]) and d[0] >= 0 and d[1] in ("kick", "snare", "hat")
+                and number(d[2]) and 0 <= d[2] <= 1 for d in data["drums"])
+    )
+
+
 def cached_result(video_id):
-    path = DOWNLOADS / video_id / "notes.json"
-    if not path.exists():
+    folder = DOWNLOADS / video_id
+    try:
+        data = json.loads((folder / "notes.json").read_text(encoding="utf-8"))
+        if valid_result(data, video_id) and (folder / "audio.wav").is_file():
+            return data
+    except (OSError, ValueError, OverflowError):
+        # Cache ausente, incompleto ou ilegível: o próximo POST refaz a análise.
         return None
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return data if data.get("analysis_version") == ANALYSIS_VERSION else None
 
 
 class Handler(BaseHTTPRequestHandler):

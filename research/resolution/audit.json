@@ -1,0 +1,22 @@
+{
+  "validated": true,
+  "conditions": 128,
+  "strictOracleSequences": 256,
+  "prototypeSequences": 256,
+  "baselineFusionSequencesExactlyReproduced": 12,
+  "splitGroupsDisjoint": true,
+  "productionUnchanged": true,
+  "modelFrozenBeforeTestEvaluation": true,
+  "externalRepoCommits": {
+    "lstom": "106f1d9a6e96f9e9d0ad9cbacb47f9ae17c60c72",
+    "vocsep": "82152a9591ba2759a556a6f9f52fd8eab771ca4a",
+    "multitask-f0": "b6e68490118c37b043cfeda51f9641edcb7b3c98"
+  },
+  "mainEnvironmentOptionalPackages": {
+    "tensorflow": false,
+    "torch": false,
+    "xgboost": false
+  },
+  "reportSHA256": "f89e39eec2b5a74266f250eb61c2025ccf1387b4c696c05a47f71249656d1aa5",
+  "artifactsIndexed": 1402
+}

@@ -1,0 +1,1899 @@
+{
+  "created": "2026-11-12T17:59:57.628Z",
+  "decision": "Do not promote continuous-v1 to production: fixes four development conflicts but worsens known soft-high-lead symbolic controls. Complementary estimators and spectral model remain research evidence, not validated resolvers.",
+  "runs": {
+    "harmonic": "/home/gaok1/Pessoal/motor-orchestra/downloads/research/harmonic-1794505637554",
+    "multipitch": "/home/gaok1/Pessoal/motor-orchestra/downloads/research/multipitch-20261112"
+  },
+  "realSongs": {
+    "total": 34,
+    "additionalTracks": 31,
+    "additionalGroups": 29,
+    "warning": "No aligned reference for real music. These are changes and structural checks, not accuracy or listener preference.",
+    "byBudget": [
+      {
+        "motors": 1,
+        "groupMeanChangedPct": 5.476902105054996,
+        "groupMeanOccupancyDeltaPercentagePoints": -0.028295831499459346,
+        "groupMeanGapsDelta": 0.1206896551724138,
+        "tracksWithFewerGaps": 13,
+        "tracksWithMoreGaps": 15,
+        "tracksWithSameGaps": 3
+      },
+      {
+        "motors": 3,
+        "groupMeanChangedPct": 5.476902105054996,
+        "groupMeanOccupancyDeltaPercentagePoints": -0.028295831499459346,
+        "groupMeanGapsDelta": 0.1206896551724138,
+        "tracksWithFewerGaps": 13,
+        "tracksWithMoreGaps": 15,
+        "tracksWithSameGaps": 3
+      },
+      {
+        "motors": 4,
+        "groupMeanChangedPct": 5.476902105054996,
+        "groupMeanOccupancyDeltaPercentagePoints": -0.028295831499459346,
+        "groupMeanGapsDelta": 0.1206896551724138,
+        "tracksWithFewerGaps": 13,
+        "tracksWithMoreGaps": 15,
+        "tracksWithSameGaps": 3
+      },
+      {
+        "motors": 6,
+        "groupMeanChangedPct": 5.476902105054996,
+        "groupMeanOccupancyDeltaPercentagePoints": -0.028295831499459346,
+        "groupMeanGapsDelta": 0.1206896551724138,
+        "tracksWithFewerGaps": 13,
+        "tracksWithMoreGaps": 15,
+        "tracksWithSameGaps": 3
+      },
+      {
+        "motors": 12,
+        "groupMeanChangedPct": 5.476902105054996,
+        "groupMeanOccupancyDeltaPercentagePoints": -0.028295831499459346,
+        "groupMeanGapsDelta": 0.1206896551724138,
+        "tracksWithFewerGaps": 13,
+        "tracksWithMoreGaps": 15,
+        "tracksWithSameGaps": 3
+      }
+    ]
+  },
+  "symbolic": [
+    {
+      "family": "jittered-harmonic-shadows",
+      "cases": 36,
+      "byAlgorithm": [
+        {
+          "name": "baseline",
+          "meanDesignatedLeadCoverageAt1": 1.041666666666666,
+          "meanAllSourcesCoverageAt2": 100,
+          "meanAllSourcesCoverageAt4": 100
+        },
+        {
+          "name": "continuous",
+          "meanDesignatedLeadCoverageAt1": 1.3888888888888882,
+          "meanAllSourcesCoverageAt2": 100,
+          "meanAllSourcesCoverageAt4": 100
+        }
+      ],
+      "regressedCaseIndices": [
+        10,
+        21
+      ]
+    },
+    {
+      "family": "soft-independent-high",
+      "cases": 36,
+      "byAlgorithm": [
+        {
+          "name": "baseline",
+          "meanDesignatedLeadCoverageAt1": 95.13888888888889,
+          "meanAllSourcesCoverageAt2": 49.25351708297444,
+          "meanAllSourcesCoverageAt4": 99.47916666666667
+        },
+        {
+          "name": "continuous",
+          "meanDesignatedLeadCoverageAt1": 86.80555555555556,
+          "meanAllSourcesCoverageAt2": 49.25351708297444,
+          "meanAllSourcesCoverageAt4": 99.47916666666667
+        }
+      ],
+      "regressedCaseIndices": [
+        1,
+        13,
+        25
+      ]
+    },
+    {
+      "family": "staggered-divergent-upper",
+      "cases": 36,
+      "byAlgorithm": [
+        {
+          "name": "baseline",
+          "meanDesignatedLeadCoverageAt1": 100,
+          "meanAllSourcesCoverageAt2": 100,
+          "meanAllSourcesCoverageAt4": 100
+        },
+        {
+          "name": "continuous",
+          "meanDesignatedLeadCoverageAt1": 100,
+          "meanAllSourcesCoverageAt2": 100,
+          "meanAllSourcesCoverageAt4": 100
+        }
+      ],
+      "regressedCaseIndices": []
+    },
+    {
+      "family": "true-parallel-ambiguous",
+      "cases": 36,
+      "byAlgorithm": [
+        {
+          "name": "baseline",
+          "meanDesignatedLeadCoverageAt1": null,
+          "meanAllSourcesCoverageAt2": 100,
+          "meanAllSourcesCoverageAt4": 100
+        },
+        {
+          "name": "continuous",
+          "meanDesignatedLeadCoverageAt1": null,
+          "meanAllSourcesCoverageAt2": 100,
+          "meanAllSourcesCoverageAt4": 100
+        }
+      ],
+      "regressedCaseIndices": []
+    }
+  ],
+  "multipitch": {
+    "essentia": "2.1-beta6-dev",
+    "settings": {
+      "sampleRate": 44100,
+      "frameSize": 2048,
+      "hopSize": 128,
+      "minFrequency": 80,
+      "maxFrequency": 2000
+    },
+    "other_parameters": "library defaults",
+    "preprocessing": "EqualLoudness for both estimators; original prior research configuration",
+    "metrics": "50-cent one-to-one pitch-set matching per frame, not note-event F1. Designated-lead recall separate from all-source precision/recall.",
+    "warning": "Deterministic pilot controls, no real-song aligned ground truth; D is observationally ambiguous.",
+    "script_sha256": "1d8ede936465bdd11f2a041001574d00808d9dfdb221bd3395d885989ee09a91",
+    "cases": [
+      {
+        "name": "pure-tone",
+        "reference": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "audio_sha256": "6b25cee588e9c00b78ffdd5b611b269b9dd25b6d4c885399363d9532bc50bd73",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.08114235299944994,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 98.54862119013062,
+            "designatedLeadRecallPct": 98.54862119013062,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.3278836230019806,
+            "pitchSetPrecisionPct": 43.829516539440206,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 102,
+            "alignmentSeconds": 0.12148531699858722
+          },
+          "BasicPitch": {
+            "seconds": 0.046474615002807695,
+            "pitchSetPrecisionPct": 83.31071913161465,
+            "pitchSetRecallPct": 89.11465892597968,
+            "designatedLeadRecallPct": 89.11465892597968,
+            "coreLeadRecallPct": 95.82577132486388
+          }
+        }
+      },
+      {
+        "name": "rich-harmonics",
+        "reference": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "audio_sha256": "55274d7753155ede6f411668f5f415f5d2664bb9328becd0eace96cb2a0fc844",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09359237599710468,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 98.54862119013062,
+            "designatedLeadRecallPct": 98.54862119013062,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5252238009998109,
+            "pitchSetPrecisionPct": 44.28020565552699,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 104,
+            "alignmentSeconds": 0.13223238499995205
+          },
+          "BasicPitch": {
+            "seconds": 0.03931386700060102,
+            "pitchSetPrecisionPct": 22.472677595628415,
+            "pitchSetRecallPct": 95.50072568940493,
+            "designatedLeadRecallPct": 95.50072568940493,
+            "coreLeadRecallPct": 97.64065335753176
+          }
+        }
+      },
+      {
+        "name": "weak-fundamental",
+        "reference": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "audio_sha256": "43c4e475cc95598177afac41d98f021023b342b96ee887a6d602cf203f26bbfa",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09450744299829239,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 98.69375907111757,
+            "designatedLeadRecallPct": 98.69375907111757,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5574709530010296,
+            "pitchSetPrecisionPct": 44.1101152368758,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 104,
+            "alignmentSeconds": 0.12803498200082686
+          },
+          "BasicPitch": {
+            "seconds": 0.05600588499873993,
+            "pitchSetPrecisionPct": 22.549668874172184,
+            "pitchSetRecallPct": 98.8388969521045,
+            "designatedLeadRecallPct": 98.8388969521045,
+            "coreLeadRecallPct": 100
+          }
+        }
+      },
+      {
+        "name": "missing-fundamental",
+        "reference": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.1,
+            0.6,
+            55
+          ],
+          [
+            0.7,
+            1.2,
+            57
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            53
+          ],
+          [
+            1.9,
+            2.4,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "audio_sha256": "10fe1d8abb93bcf0cf69cf135675e69fbe41abeb333b41a5c9b2b8aab560561f",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09486720800123294,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 98.69375907111757,
+            "designatedLeadRecallPct": 98.69375907111757,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5458445690019289,
+            "pitchSetPrecisionPct": 44.0537084398977,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 104,
+            "alignmentSeconds": 0.12303035600052681
+          },
+          "BasicPitch": {
+            "seconds": 0.049394285000744276,
+            "pitchSetPrecisionPct": 0,
+            "pitchSetRecallPct": 0,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          }
+        }
+      },
+      {
+        "name": "fast-repeated-attacks",
+        "reference": [
+          [
+            0.1,
+            0.2,
+            50
+          ],
+          [
+            0.25,
+            0.35,
+            50
+          ],
+          [
+            0.4,
+            0.6,
+            62
+          ],
+          [
+            0.65,
+            0.9,
+            57
+          ],
+          [
+            1.15,
+            1.4,
+            56
+          ],
+          [
+            1.45,
+            1.7,
+            55
+          ],
+          [
+            1.75,
+            2.05,
+            53
+          ],
+          [
+            2.1,
+            2.2,
+            50
+          ],
+          [
+            2.25,
+            2.35,
+            53
+          ],
+          [
+            2.4,
+            2.5,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.1,
+            0.2,
+            50
+          ],
+          [
+            0.25,
+            0.35,
+            50
+          ],
+          [
+            0.4,
+            0.6,
+            62
+          ],
+          [
+            0.65,
+            0.9,
+            57
+          ],
+          [
+            1.15,
+            1.4,
+            56
+          ],
+          [
+            1.45,
+            1.7,
+            55
+          ],
+          [
+            1.75,
+            2.05,
+            53
+          ],
+          [
+            2.1,
+            2.2,
+            50
+          ],
+          [
+            2.25,
+            2.35,
+            53
+          ],
+          [
+            2.4,
+            2.5,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "audio_sha256": "b5c790ae29f6ee7571456272697dda379bc6e9ca6167b1f92378c532c7af5bb9",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09193835900077829,
+            "pitchSetPrecisionPct": 99.78632478632478,
+            "pitchSetRecallPct": 77.44610281923715,
+            "designatedLeadRecallPct": 77.44610281923715,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5009412990002602,
+            "pitchSetPrecisionPct": 42.02090592334495,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 118,
+            "alignmentSeconds": 0.13313551000101143
+          },
+          "BasicPitch": {
+            "seconds": 0.05316710400074953,
+            "pitchSetPrecisionPct": 25.777377196935557,
+            "pitchSetRecallPct": 94.85903814262024,
+            "designatedLeadRecallPct": 94.85903814262024,
+            "coreLeadRecallPct": 94.96124031007751
+          }
+        }
+      },
+      {
+        "name": "high-melody-over-bass",
+        "reference": [
+          [
+            0.1,
+            0.6,
+            74
+          ],
+          [
+            0.7,
+            1.2,
+            76
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            72
+          ],
+          [
+            1.9,
+            2.4,
+            74
+          ],
+          [
+            0.1,
+            2.4,
+            43
+          ]
+        ],
+        "lead": [
+          [
+            0.1,
+            0.6,
+            74
+          ],
+          [
+            0.7,
+            1.2,
+            76
+          ],
+          [
+            1.3,
+            1.7999999999999998,
+            72
+          ],
+          [
+            1.9,
+            2.4,
+            74
+          ]
+        ],
+        "ambiguous": false,
+        "audio_sha256": "4724ed4988ca83e1c5b08feaa1327a0cb28fb1e939907be485492b495a4a2ec1",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.07858008399853134,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 52.93720459149223,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.4295489659998566,
+            "pitchSetPrecisionPct": 70.80838323353294,
+            "pitchSetRecallPct": 63.87575962187711,
+            "designatedLeadRecallPct": 23.367198838896954,
+            "coreLeadRecallPct": 24.86388384754991,
+            "omittedFrames": 103,
+            "alignmentSeconds": 0.1172627019986976
+          },
+          "BasicPitch": {
+            "seconds": 0.05378396100059035,
+            "pitchSetPrecisionPct": 67.67261088248742,
+            "pitchSetRecallPct": 99.932478055368,
+            "designatedLeadRecallPct": 99.85486211901306,
+            "coreLeadRecallPct": 100
+          }
+        }
+      },
+      {
+        "name": "A-strong-third",
+        "reference": [
+          [
+            0.2,
+            2.5,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.2,
+            2.5,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "sources": [
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 55,
+            "partials": [
+              [
+                1,
+                0.2
+              ],
+              [
+                2,
+                0.4
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.3
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          }
+        ],
+        "audio_sha256": "ae58a4574520ac18ed960769e486c9f7176d1834dd1ff3f32b04cdfecde01a44",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09461755399752292,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 98.86506935687264,
+            "designatedLeadRecallPct": 98.86506935687264,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5327361079980619,
+            "pitchSetPrecisionPct": 48.56093080220453,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 137,
+            "alignmentSeconds": 0.12446261700097239
+          },
+          "BasicPitch": {
+            "seconds": 0.052968551997764735,
+            "pitchSetPrecisionPct": 19.68230330106726,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100
+          }
+        }
+      },
+      {
+        "name": "B-real-pair-modulated",
+        "reference": [
+          [
+            0.2,
+            2.5,
+            55
+          ],
+          [
+            0.2,
+            2.5,
+            74
+          ]
+        ],
+        "lead": [
+          [
+            0.2,
+            2.5,
+            74
+          ]
+        ],
+        "ambiguous": false,
+        "sources": [
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 55,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 5,
+            "rate": 4.2,
+            "hz": null
+          },
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 74,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.45,
+            "vibrato": 35,
+            "rate": 5.5,
+            "hz": null
+          }
+        ],
+        "audio_sha256": "26676b5968d8feaa256229ed2e2968f815dbb17126479787445d9dd2c6250ad6",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09407153199936147,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 49.558638083228246,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5981486450000375,
+            "pitchSetPrecisionPct": 94.85645933014354,
+            "pitchSetRecallPct": 50,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0,
+            "omittedFrames": 136,
+            "alignmentSeconds": 0.1279608940021717
+          },
+          "BasicPitch": {
+            "seconds": 0.04594604299927596,
+            "pitchSetPrecisionPct": 32.80926768721556,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100
+          }
+        }
+      },
+      {
+        "name": "C-real-pair-staggered",
+        "reference": [
+          [
+            0.2,
+            1.7,
+            55
+          ],
+          [
+            0.9,
+            2.5,
+            74
+          ]
+        ],
+        "lead": [
+          [
+            0.9,
+            2.5,
+            74
+          ]
+        ],
+        "ambiguous": false,
+        "sources": [
+          {
+            "start": 0.2,
+            "end": 1.7,
+            "midi": 55,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 0.9,
+            "end": 2.5,
+            "midi": 74,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.45,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          }
+        ],
+        "audio_sha256": "d582b9a4099a5bb04c441008d1453cb32d24b974b3326553f176e7470d4ad4d6",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.11201065399654908,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 48.12734082397004,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5515789519995451,
+            "pitchSetPrecisionPct": 95.11904761904762,
+            "pitchSetRecallPct": 74.812734082397,
+            "designatedLeadRecallPct": 51.17967332123412,
+            "coreLeadRecallPct": 51.25725338491296,
+            "omittedFrames": 138,
+            "alignmentSeconds": 0.12614760499855038
+          },
+          "BasicPitch": {
+            "seconds": 0.047124807999352925,
+            "pitchSetPrecisionPct": 25.747348119575697,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100
+          }
+        }
+      },
+      {
+        "name": "D-identical-observation",
+        "reference": [
+          [
+            0.2,
+            2.5,
+            55
+          ],
+          [
+            0.2,
+            2.5,
+            74
+          ]
+        ],
+        "lead": [
+          [
+            0.2,
+            2.5,
+            74
+          ]
+        ],
+        "ambiguous": true,
+        "sources": [
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 55,
+            "partials": [
+              [
+                1,
+                0.8
+              ],
+              [
+                2,
+                0.3
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.1
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 74,
+            "partials": [
+              [
+                1,
+                0.35
+              ],
+              [
+                2,
+                0.1
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": 587.9931539726239
+          }
+        ],
+        "audio_sha256": "3d9aadc2038f8d87ad67966f2fa6a613dbedcc0a755c7657a9a5cd78ac269c9e",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.0899596900017059,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 49.43253467843632,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.4854649939989031,
+            "pitchSetPrecisionPct": 48.56093080220453,
+            "pitchSetRecallPct": 50,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0,
+            "omittedFrames": 136,
+            "alignmentSeconds": 0.12517182500232593
+          },
+          "BasicPitch": {
+            "seconds": 0.044326743998681195,
+            "pitchSetPrecisionPct": 48.16997518610422,
+            "pitchSetRecallPct": 97.91929382093316,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100
+          }
+        }
+      },
+      {
+        "name": "E-missing-fundamental",
+        "reference": [
+          [
+            0.2,
+            2.5,
+            55
+          ]
+        ],
+        "lead": [
+          [
+            0.2,
+            2.5,
+            55
+          ]
+        ],
+        "ambiguous": false,
+        "sources": [
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 55,
+            "partials": [
+              [
+                2,
+                0.6
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                0.3
+              ],
+              [
+                5,
+                0.2
+              ],
+              [
+                6,
+                0.25
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          }
+        ],
+        "audio_sha256": "3f32a51f446333fd743705c6eada08f9c8160ffaa5026bff989e57c7cbfc429b",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.08848376799869584,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 98.86506935687264,
+            "designatedLeadRecallPct": 98.86506935687264,
+            "coreLeadRecallPct": 100
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.5144425010003033,
+            "pitchSetPrecisionPct": 48.59068627450981,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100,
+            "omittedFrames": 137,
+            "alignmentSeconds": 0.12323909599945182
+          },
+          "BasicPitch": {
+            "seconds": 0.04499763499916298,
+            "pitchSetPrecisionPct": 0,
+            "pitchSetRecallPct": 0,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          }
+        }
+      },
+      {
+        "name": "F-soft-high-lead",
+        "reference": [
+          [
+            0.2,
+            2.5,
+            55
+          ],
+          [
+            0.2,
+            0.61,
+            74
+          ],
+          [
+            0.66,
+            1.07,
+            76
+          ],
+          [
+            1.12,
+            1.53,
+            77
+          ],
+          [
+            1.58,
+            1.9900000000000002,
+            76
+          ],
+          [
+            2.04,
+            2.45,
+            74
+          ]
+        ],
+        "lead": [
+          [
+            0.2,
+            0.61,
+            74
+          ],
+          [
+            0.66,
+            1.07,
+            76
+          ],
+          [
+            1.12,
+            1.53,
+            77
+          ],
+          [
+            1.58,
+            1.9900000000000002,
+            76
+          ],
+          [
+            2.04,
+            2.45,
+            74
+          ]
+        ],
+        "ambiguous": false,
+        "sources": [
+          {
+            "start": 0.2,
+            "end": 2.5,
+            "midi": 55,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 1,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 0.2,
+            "end": 0.61,
+            "midi": 74,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.18,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 0.66,
+            "end": 1.07,
+            "midi": 76,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.18,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 1.12,
+            "end": 1.53,
+            "midi": 77,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.18,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 1.58,
+            "end": 1.9900000000000002,
+            "midi": 76,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.18,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          },
+          {
+            "start": 2.04,
+            "end": 2.45,
+            "midi": 74,
+            "partials": [
+              [
+                1,
+                0.65
+              ],
+              [
+                2,
+                0.35
+              ],
+              [
+                3,
+                0.25
+              ],
+              [
+                4,
+                0.2
+              ],
+              [
+                5,
+                0.15
+              ],
+              [
+                6,
+                0.1
+              ]
+            ],
+            "gain": 0.18,
+            "vibrato": 0,
+            "rate": 5,
+            "hz": null
+          }
+        ],
+        "audio_sha256": "256a6ecd9fe14e5062d937de1a948f3e21a964e5869922b47db5a30b32eedbcd",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 0.09078009400036535,
+            "pitchSetPrecisionPct": 100,
+            "pitchSetRecallPct": 52.298467688207865,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 0.6335903849976603,
+            "pitchSetPrecisionPct": 93.84615384615384,
+            "pitchSetRecallPct": 52.831445702864755,
+            "designatedLeadRecallPct": 0,
+            "coreLeadRecallPct": 0,
+            "omittedFrames": 136,
+            "alignmentSeconds": 0.13011487200128613
+          },
+          "BasicPitch": {
+            "seconds": 0.050115982001443626,
+            "pitchSetPrecisionPct": 27.729539996305192,
+            "pitchSetRecallPct": 100,
+            "designatedLeadRecallPct": 100,
+            "coreLeadRecallPct": 100
+          }
+        }
+      }
+    ],
+    "songs": [
+      {
+        "id": "0FCvzsVlXpQ",
+        "duration": 156,
+        "time_scale": 1,
+        "tuning_cents": 0,
+        "audio_sha256": "95cb0fb4d8f691dbdf7ba35b69dbf11e93b3af8eb7205358743e6d606301260a",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 9.82399550700211,
+            "frames": 53748,
+            "meanPolyphony": 1.1873930192751359,
+            "conflicts": [
+              {
+                "start": 1.126,
+                "end": 1.265,
+                "frames": 48,
+                "pitchFrameCounts": {
+                  "55": 0,
+                  "74": 0
+                }
+              },
+              {
+                "start": 3.124,
+                "end": 3.264,
+                "frames": 48,
+                "pitchFrameCounts": {
+                  "55": 0,
+                  "74": 0
+                }
+              },
+              {
+                "start": 5.134,
+                "end": 5.285,
+                "frames": 52,
+                "pitchFrameCounts": {
+                  "55": 0,
+                  "74": 0
+                }
+              },
+              {
+                "start": 7.132,
+                "end": 7.283,
+                "frames": 52,
+                "pitchFrameCounts": {
+                  "55": 0,
+                  "74": 0
+                }
+              }
+            ]
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 42.33696419400076,
+            "frames": 53748,
+            "meanPolyphony": 1.8608692416462007,
+            "conflicts": [
+              {
+                "start": 1.126,
+                "end": 1.265,
+                "frames": 48,
+                "pitchFrameCounts": {
+                  "55": 48,
+                  "74": 35
+                }
+              },
+              {
+                "start": 3.124,
+                "end": 3.264,
+                "frames": 48,
+                "pitchFrameCounts": {
+                  "55": 48,
+                  "74": 35
+                }
+              },
+              {
+                "start": 5.134,
+                "end": 5.285,
+                "frames": 52,
+                "pitchFrameCounts": {
+                  "55": 48,
+                  "74": 37
+                }
+              },
+              {
+                "start": 7.132,
+                "end": 7.283,
+                "frames": 52,
+                "pitchFrameCounts": {
+                  "55": 48,
+                  "74": 36
+                }
+              }
+            ],
+            "rawRetainedFrames": 53287,
+            "omittedFrames": 461,
+            "alignmentSeconds": 8.071222792998014
+          }
+        }
+      },
+      {
+        "id": "PJ1yqbr8Y50",
+        "duration": 173.18605442176872,
+        "time_scale": 1.0221768707482992,
+        "tuning_cents": -38,
+        "audio_sha256": "0c551282e85d38a7517af01fb2077d1f86a7f72ad3c0654a8831c14595486290",
+        "algorithms": {
+          "MultiPitchMelodia": {
+            "seconds": 10.053584758999932,
+            "frames": 58375,
+            "meanPolyphony": 1.063880085653105,
+            "conflicts": []
+          },
+          "MultiPitchKlapuri": {
+            "seconds": 44.33883041699664,
+            "frames": 58375,
+            "meanPolyphony": 1.847880085653105,
+            "conflicts": [],
+            "rawRetainedFrames": 57855,
+            "omittedFrames": 520,
+            "alignmentSeconds": 9.615525560999231
+          }
+        }
+      }
+    ],
+    "ambiguity_max_absolute_sample_error": 3.3230065366041117e-9,
+    "klapuri_clock_aligned": true,
+    "alignment_script_sha256": "49594e58cf5443444d9ddb4ea1b09bc5e3e0cd7710b960aa5dbf012d66d7632d",
+    "clock_helper_sha256": "50198949a34ca3f0b972633ff7b413714faaadd46b56c4e2a7cb32a7e78dd846"
+  },
+  "harmonicTrace": {
+    "before": [
+      {
+        "note": {
+          "midi": 74,
+          "start": 1.126,
+          "end": 1.265,
+          "strength": 0.189
+        },
+        "parent": {
+          "midi": 55,
+          "start": 1.126,
+          "end": 1.312,
+          "strength": 0.481
+        },
+        "interval": 19,
+        "independent": false,
+        "parallel": true,
+        "neighbors": [
+          {
+            "midi": 72,
+            "start": 1.382,
+            "end": 1.614,
+            "coverage": 0.8017241379310345,
+            "paired": true
+          }
+        ]
+      },
+      {
+        "note": {
+          "midi": 74,
+          "start": 3.124,
+          "end": 3.264,
+          "strength": 0.19
+        },
+        "parent": {
+          "midi": 55,
+          "start": 3.124,
+          "end": 3.322,
+          "strength": 0.466
+        },
+        "interval": 19,
+        "independent": false,
+        "parallel": true,
+        "neighbors": [
+          {
+            "midi": 72,
+            "start": 3.391,
+            "end": 3.635,
+            "coverage": 1,
+            "paired": true
+          }
+        ]
+      },
+      {
+        "note": {
+          "midi": 74,
+          "start": 5.134,
+          "end": 5.285,
+          "strength": 0.207
+        },
+        "parent": {
+          "midi": 55,
+          "start": 5.123,
+          "end": 5.32,
+          "strength": 0.468
+        },
+        "interval": 19,
+        "independent": true,
+        "parallel": true,
+        "neighbors": [
+          {
+            "midi": 75,
+            "start": 4.879,
+            "end": 5.018,
+            "coverage": 0.6690647482014375,
+            "paired": false
+          },
+          {
+            "midi": 72,
+            "start": 5.39,
+            "end": 5.866,
+            "coverage": 0.7563025210084041,
+            "paired": true
+          }
+        ]
+      },
+      {
+        "note": {
+          "midi": 74,
+          "start": 7.132,
+          "end": 7.283,
+          "strength": 0.208
+        },
+        "parent": {
+          "midi": 55,
+          "start": 7.121,
+          "end": 7.318,
+          "strength": 0.468
+        },
+        "interval": 19,
+        "independent": true,
+        "parallel": true,
+        "neighbors": [
+          {
+            "midi": 75,
+            "start": 6.877,
+            "end": 7.016,
+            "coverage": 0.6690647482014375,
+            "paired": false
+          },
+          {
+            "midi": 72,
+            "start": 7.388,
+            "end": 7.62,
+            "coverage": 1,
+            "paired": true
+          }
+        ]
+      }
+    ],
+    "after": [
+      {
+        "note": {
+          "midi": 74,
+          "start": 1.126,
+          "end": 1.265
+        },
+        "shadow": 0.18708942015181218,
+        "relations": [
+          {
+            "interval": 19,
+            "association": {
+              "coverage": 1,
+              "weightedCoverage": 1,
+              "attack": 1,
+              "fit": 1
+            },
+            "neighbors": [
+              {
+                "midi": 72,
+                "start": 1.382,
+                "end": 1.614,
+                "coverage": 0.8017241379310345,
+                "weightedCoverage": 0.8017241379310345,
+                "attack": 0.74535930454298,
+                "fit": 0.5975725458835961
+              }
+            ],
+            "parallel": 0.5975725458835961,
+            "continuation": 0.8380521441733896,
+            "dependency": 0.8380521441733896,
+            "factor": 0.18708942015181218
+          }
+        ]
+      },
+      {
+        "note": {
+          "midi": 74,
+          "start": 3.124,
+          "end": 3.264
+        },
+        "shadow": 0.030269394759584123,
+        "relations": [
+          {
+            "interval": 19,
+            "association": {
+              "coverage": 1,
+              "weightedCoverage": 1,
+              "attack": 1,
+              "fit": 1
+            },
+            "neighbors": [
+              {
+                "midi": 72,
+                "start": 3.391,
+                "end": 3.635,
+                "coverage": 1,
+                "weightedCoverage": 1,
+                "attack": 0.9833348700493456,
+                "fit": 0.9833348700493456
+              }
+            ],
+            "parallel": 0.9833348700493456,
+            "continuation": 0.9997222734437278,
+            "dependency": 0.9997222734437278,
+            "factor": 0.030269394759584123
+          }
+        ]
+      },
+      {
+        "note": {
+          "midi": 74,
+          "start": 5.134,
+          "end": 5.285
+        },
+        "shadow": 0.18389154396727103,
+        "relations": [
+          {
+            "interval": 19,
+            "association": {
+              "coverage": 1,
+              "weightedCoverage": 1,
+              "attack": 0.9833348700493456,
+              "fit": 0.9833348700493456
+            },
+            "neighbors": [
+              {
+                "midi": 75,
+                "start": 4.879,
+                "end": 5.018,
+                "coverage": 0.6690647482014375,
+                "weightedCoverage": 0.6690647482014375,
+                "attack": 0.7453593045429779,
+                "fit": 0.4986936354136461
+              },
+              {
+                "midi": 72,
+                "start": 5.39,
+                "end": 5.866,
+                "coverage": 0.7563025210084041,
+                "weightedCoverage": 0.7563025210084041,
+                "attack": 0.9801986733067567,
+                "fit": 0.7413267277109932
+              }
+            ],
+            "parallel": 0.6200101815623196,
+            "continuation": 0.8556077378836987,
+            "dependency": 0.8413489237450814,
+            "factor": 0.18389154396727103
+          }
+        ]
+      },
+      {
+        "note": {
+          "midi": 74,
+          "start": 7.132,
+          "end": 7.283
+        },
+        "shadow": 0.11091940690939672,
+        "relations": [
+          {
+            "interval": 19,
+            "association": {
+              "coverage": 1,
+              "weightedCoverage": 1,
+              "attack": 0.9833348700493483,
+              "fit": 0.9833348700493483
+            },
+            "neighbors": [
+              {
+                "midi": 75,
+                "start": 6.877,
+                "end": 7.016,
+                "coverage": 0.6690647482014375,
+                "weightedCoverage": 0.6690647482014375,
+                "attack": 0.7453593045429779,
+                "fit": 0.4986936354136461
+              },
+              {
+                "midi": 72,
+                "start": 7.388,
+                "end": 7.62,
+                "coverage": 1,
+                "weightedCoverage": 1,
+                "attack": 0.9801986733067567,
+                "fit": 0.9801986733067567
+              }
+            ],
+            "parallel": 0.7394461543602013,
+            "continuation": 0.9321116935223119,
+            "dependency": 0.9165779310212405,
+            "factor": 0.11091940690939672
+          }
+        ]
+      }
+    ]
+  },
+  "sourceHashes": {
+    "scripts/research-harmonic-diagnostics.py": "fc2e53ffb554b806d548356324f78e839bd8f5bf1c681802adfee1f894793dc7",
+    "scripts/research-harmonic-model.py": "59906b700f3b924db9640629f04ed744471b1c96d2e20f32b189a9d4b840eb01",
+    "scripts/research-harmonic-prototype.mjs": "b741939b2eea9a52b6b53dd0c0004233d7a164c52e02b1c7eb36385378fb978e",
+    "scripts/research-harmonic-summary.mjs": "e161fc4916d40625c7bca5cfd3d75f8601db2afc003632fc57409b14cecf486e",
+    "scripts/research-harmonic-symbolic.mjs": "8d11abc421bfa41168170794926c6cd471498f1da96a5a9fcd629189cc47ebc9",
+    "scripts/research-harmonic-validation.mjs": "5203ddfa89909b7118d229929ac91c8ff77d73172dca828660076254c6a06043",
+    "scripts/research-melodia-controls.py": "e08b208e011e9c9741ee80740861663746df138bf778dfc7552325d70ddce687",
+    "scripts/research-melodia-variants.py": "d9fc08c7571a47b804b06e266a5a22c0ec9cd01719bd1ef6b14ede8146b7c84f",
+    "scripts/research-melody-guide.mjs": "51773c4b8a3a28280fdd59df6f4642ace40ab680b05b882b570a1bb1ea99af76",
+    "scripts/research-melody.py": "41d2a01630a75f058e57e1606f50235683a1d40c9f61f0b9eb66f3bbbaae671e",
+    "scripts/research-multipitch-align.py": "49594e58cf5443444d9ddb4ea1b09bc5e3e0cd7710b960aa5dbf012d66d7632d",
+    "scripts/research-multipitch.py": "437c0fcb35a0ae4e333583819cfa7b99f86365249f6bae854407135acf30d81b",
+    "scripts/research_pitch_sets.py": "50198949a34ca3f0b972633ff7b413714faaadd46b56c4e2a7cb32a7e78dd846",
+    "research/continuous-harmonics.mjs": "f5784620028c7c021e69006e5e03d9a8e34b906976366634ad240ecbf14140b4"
+  },
+  "artifactHashes": {
+    "harmonic-validation-2026-11-12.json": "e2646ef6171b2b1375f5ea8d619362950851ca481da9db99704beb47ad462739",
+    "harmonic-symbolic-2026-11-12.json": "a0f0ad10ff531c770396ad3185f0f99554417f7a17e336f3f2d7449df00386b2",
+    "multipitch-2026-11-12.json": "c458bba5c391037482d27f1b2f7ec5d82e193b0d3c520316311d5ee5dfb9276b",
+    "harmonic-model-2026-11-12.json": "a8b2468f92332fd72a4043ddf470ff4eeda573c335ffc1dfbb361a8ba8e8a186"
+  },
+  "currentArrangerMatchesFrozenBaseline": true
+}

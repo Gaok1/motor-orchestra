@@ -33,25 +33,32 @@
           <button type="button" class="chip" data-source="youtube" id="youtube-chip" hidden></button>
         </div>
         <div id="youtube-controls" class="youtube-controls" hidden>
-          <label title="Linhas: cada motor pega a melhor linha de notas que sobrou. Papéis: melodia, harmonia e baixo por regra.">Distribuição
+          <label title="Redução orquestral: prioriza a melodia, depois o fundamento grave e a harmonia. Linhas dinâmicas: prioriza intensidade e duração.">Distribuição
             <select id="method">
+              <option value="melodia" selected>Redução orquestral (melodia primeiro)</option>
               <option value="linhas">Linhas dinâmicas</option>
               <option value="papeis">Papéis (melodia/harmonia/baixo)</option>
             </select></label>
-          <label id="density-label" title="Quantas notas fracas a transcrição aceita. Mais densidade = mais material para os motores extras.">Densidade de notas
+          <label id="density-label" title="Quantas notas fracas a transcrição aceita. Alta ajuda a encontrar a melodia na orquestra mesmo com poucos motores, mas também pode trazer notas falsas.">Densidade de notas
             <select id="density">
               <option value="normal">Normal</option>
-              <option value="media" selected>Média</option>
-              <option value="alta">Alta</option>
+              <option value="media">Média</option>
+              <option value="alta" selected>Alta</option>
             </select></label>
           <label class="check"><input id="percussion" type="checkbox" checked /> Motor de percussão</label>
           <span id="line-options" class="line-options">
+            <label class="check" title="Agrupa continuações de frases no mesmo motor, preservando as notas e sem aumentar as pausas curtas. Na redução orquestral, mantém a primeira linha fixa."><input id="continuity" type="checkbox" checked /> Manter frases no mesmo motor</label>
             <label class="check" title="A nota segue a curva fina de afinação do transcritor: vibrato e deslizes entre notas."><input id="bends" type="checkbox" /> Vibrato e deslizes</label>
             <label class="check" title="As linhas extras tocam mais baixo, na proporção da importância delas, para não embolar a melodia."><input id="mix" type="checkbox" /> Volume por importância</label>
+            <label class="check" title="Notas fracas fora da tonalidade local valem menos na escolha, a não ser que outra voz forte toque a mesma nota. Não muda volume nem afinação."><input id="harmony" type="checkbox" checked /> Filtrar notas fora da harmonia</label>
           </span>
-          <label id="threshold-label" hidden title="Notas mais fracas que isso são ignoradas. Mais alto = arranjo mais limpo e esparso.">Intensidade mínima das notas
-            <input id="threshold" type="range" min="0.15" max="0.65" step="0.01" value="0.3" />
-            <output id="threshold-value"></output></label>
+          <span id="reduction-options" class="line-options">
+            <label class="check" title="A partir do terceiro motor, prefere notas que ainda não soam em outra oitava, principalmente terças e sétimas acima do baixo."><input id="voicing" type="checkbox" checked /> Acompanhamento completa o acorde</label>
+            <label class="check" title="Um motor de acompanhamento que só teria notas fracas toca a melodia uma oitava abaixo. Num driver sem controle de corrente, é assim que a melodia fica mais forte."><input id="double" type="checkbox" checked /> Motores livres dobram a melodia</label>
+          </span>
+          <label id="threshold-label" title="Notas mais fracas que isso são ignoradas. Mais baixo = aceita mais notas suaves; mais alto = arranjo mais limpo e esparso.">Intensidade mínima das notas
+            <input id="threshold" type="range" min="0" max="0.65" step="0.01" value="0.15" />
+            <output id="threshold-value">0.15</output></label>
           <label>Áudio original (para comparar)
             <input id="original-level" type="range" min="0" max="1" step="0.01" value="0" /></label>
         </div>
@@ -61,12 +68,18 @@
         <button id="play" type="button" class="play">▶ Tocar</button>
         <label class="check"><input id="loop" type="checkbox" checked /> Repetir</label>
         <label class="inline">Andamento <input id="rate" type="range" min="0.25" max="2" step="0.05" value="1" /> <output id="rate-value">100%</output></label>
-        <div class="segmented" role="radiogroup" aria-label="Modelo de síntese">
-          <button type="button" data-model="ideal" role="radio">A · Ideal (senoide)</button>
-          <button type="button" data-model="mech" role="radio" class="on">B · Mecânico</button>
+        <div class="segmented" role="radiogroup" aria-label="Som">
+          <button type="button" data-model="ideal" role="radio" aria-checked="false">A · Ideal (senoide)</button>
+          <button type="button" data-model="mech" role="radio" aria-checked="true" class="on">B · Motores</button>
+          <button type="button" data-model="bells" role="radio" aria-checked="false">C · Sinos</button>
         </div>
+        <span id="sound-info" class="muted" hidden>Sinos com cauda de ressonância. As configurações físicas e a dinâmica abaixo representam os motores.</span>
         <label class="inline">Volume <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" /></label>
         <span id="clock" class="clock">0:00.0</span>
+        <div class="seek-row">
+          <input id="seek" type="range" min="0" max="1" step="0.1" value="0" aria-label="Posição na música" />
+          <output id="duration" class="muted">0:00.0</output>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="motors-title">
@@ -87,6 +100,13 @@
           <span id="score-info" class="muted"></span>
         </div>
         <canvas id="roll" class="roll" aria-label="Rolo de notas por motor"></canvas>
+        <canvas id="timeline" class="timeline" aria-label="Música inteira: arraste para selecionar um trecho, clique para pular para um ponto"></canvas>
+        <div class="region-row">
+          <button type="button" id="mark-start" class="secondary" title="Começa o trecho no ponto que está tocando agora">[ Início aqui</button>
+          <button type="button" id="mark-end" class="secondary" title="Termina o trecho no ponto que está tocando agora">Fim aqui ]</button>
+          <button type="button" id="clear-region" class="secondary" hidden>Tocar tudo</button>
+          <span id="region-info" class="muted"></span>
+        </div>
         <details id="editor">
           <summary>Editar partitura</summary>
           <p class="muted">Uma linha por motor. <code>A4</code> nota de 1 tempo, <code>C#5:0.5</code> meio tempo, <code>-:2</code> pausa de 2 tempos, <code>@0.5</code> muda a duração padrão, <code>v0.6</code> muda a intensidade, <code>|</code> separa compassos, <code>#</code> no início da linha é comentário.</p>

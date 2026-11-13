@@ -1,0 +1,1452 @@
+{
+  "essentia": "2.1-beta6-dev",
+  "settings": {
+    "sampleRate": 44100,
+    "frameSize": 2048,
+    "hopSize": 128,
+    "minFrequency": 80,
+    "maxFrequency": 2000
+  },
+  "other_parameters": "library defaults",
+  "preprocessing": "EqualLoudness for both estimators; original prior research configuration",
+  "metrics": "50-cent one-to-one pitch-set matching per frame, not note-event F1. Designated-lead recall separate from all-source precision/recall.",
+  "warning": "Deterministic pilot controls, no real-song aligned ground truth; D is observationally ambiguous.",
+  "script_sha256": "1d8ede936465bdd11f2a041001574d00808d9dfdb221bd3395d885989ee09a91",
+  "cases": [
+    {
+      "name": "pure-tone",
+      "reference": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "audio_sha256": "6b25cee588e9c00b78ffdd5b611b269b9dd25b6d4c885399363d9532bc50bd73",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.08114235299944994,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 98.54862119013062,
+          "designatedLeadRecallPct": 98.54862119013062,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.3278836230019806,
+          "pitchSetPrecisionPct": 43.829516539440206,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 102,
+          "alignmentSeconds": 0.12148531699858722
+        },
+        "BasicPitch": {
+          "seconds": 0.046474615002807695,
+          "pitchSetPrecisionPct": 83.31071913161465,
+          "pitchSetRecallPct": 89.11465892597968,
+          "designatedLeadRecallPct": 89.11465892597968,
+          "coreLeadRecallPct": 95.82577132486388
+        }
+      }
+    },
+    {
+      "name": "rich-harmonics",
+      "reference": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "audio_sha256": "55274d7753155ede6f411668f5f415f5d2664bb9328becd0eace96cb2a0fc844",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09359237599710468,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 98.54862119013062,
+          "designatedLeadRecallPct": 98.54862119013062,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5252238009998109,
+          "pitchSetPrecisionPct": 44.28020565552699,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 104,
+          "alignmentSeconds": 0.13223238499995205
+        },
+        "BasicPitch": {
+          "seconds": 0.03931386700060102,
+          "pitchSetPrecisionPct": 22.472677595628415,
+          "pitchSetRecallPct": 95.50072568940493,
+          "designatedLeadRecallPct": 95.50072568940493,
+          "coreLeadRecallPct": 97.64065335753176
+        }
+      }
+    },
+    {
+      "name": "weak-fundamental",
+      "reference": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "audio_sha256": "43c4e475cc95598177afac41d98f021023b342b96ee887a6d602cf203f26bbfa",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09450744299829239,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 98.69375907111757,
+          "designatedLeadRecallPct": 98.69375907111757,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5574709530010296,
+          "pitchSetPrecisionPct": 44.1101152368758,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 104,
+          "alignmentSeconds": 0.12803498200082686
+        },
+        "BasicPitch": {
+          "seconds": 0.05600588499873993,
+          "pitchSetPrecisionPct": 22.549668874172184,
+          "pitchSetRecallPct": 98.8388969521045,
+          "designatedLeadRecallPct": 98.8388969521045,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    },
+    {
+      "name": "missing-fundamental",
+      "reference": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.1,
+          0.6,
+          55
+        ],
+        [
+          0.7,
+          1.2,
+          57
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          53
+        ],
+        [
+          1.9,
+          2.4,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "audio_sha256": "10fe1d8abb93bcf0cf69cf135675e69fbe41abeb333b41a5c9b2b8aab560561f",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09486720800123294,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 98.69375907111757,
+          "designatedLeadRecallPct": 98.69375907111757,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5458445690019289,
+          "pitchSetPrecisionPct": 44.0537084398977,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 104,
+          "alignmentSeconds": 0.12303035600052681
+        },
+        "BasicPitch": {
+          "seconds": 0.049394285000744276,
+          "pitchSetPrecisionPct": 0.0,
+          "pitchSetRecallPct": 0.0,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        }
+      }
+    },
+    {
+      "name": "fast-repeated-attacks",
+      "reference": [
+        [
+          0.1,
+          0.2,
+          50
+        ],
+        [
+          0.25,
+          0.35,
+          50
+        ],
+        [
+          0.4,
+          0.6,
+          62
+        ],
+        [
+          0.65,
+          0.9,
+          57
+        ],
+        [
+          1.15,
+          1.4,
+          56
+        ],
+        [
+          1.45,
+          1.7,
+          55
+        ],
+        [
+          1.75,
+          2.05,
+          53
+        ],
+        [
+          2.1,
+          2.2,
+          50
+        ],
+        [
+          2.25,
+          2.35,
+          53
+        ],
+        [
+          2.4,
+          2.5,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.1,
+          0.2,
+          50
+        ],
+        [
+          0.25,
+          0.35,
+          50
+        ],
+        [
+          0.4,
+          0.6,
+          62
+        ],
+        [
+          0.65,
+          0.9,
+          57
+        ],
+        [
+          1.15,
+          1.4,
+          56
+        ],
+        [
+          1.45,
+          1.7,
+          55
+        ],
+        [
+          1.75,
+          2.05,
+          53
+        ],
+        [
+          2.1,
+          2.2,
+          50
+        ],
+        [
+          2.25,
+          2.35,
+          53
+        ],
+        [
+          2.4,
+          2.5,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "audio_sha256": "b5c790ae29f6ee7571456272697dda379bc6e9ca6167b1f92378c532c7af5bb9",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09193835900077829,
+          "pitchSetPrecisionPct": 99.78632478632478,
+          "pitchSetRecallPct": 77.44610281923715,
+          "designatedLeadRecallPct": 77.44610281923715,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5009412990002602,
+          "pitchSetPrecisionPct": 42.02090592334495,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 118,
+          "alignmentSeconds": 0.13313551000101143
+        },
+        "BasicPitch": {
+          "seconds": 0.05316710400074953,
+          "pitchSetPrecisionPct": 25.777377196935557,
+          "pitchSetRecallPct": 94.85903814262024,
+          "designatedLeadRecallPct": 94.85903814262024,
+          "coreLeadRecallPct": 94.96124031007751
+        }
+      }
+    },
+    {
+      "name": "high-melody-over-bass",
+      "reference": [
+        [
+          0.1,
+          0.6,
+          74
+        ],
+        [
+          0.7,
+          1.2,
+          76
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          72
+        ],
+        [
+          1.9,
+          2.4,
+          74
+        ],
+        [
+          0.1,
+          2.4,
+          43
+        ]
+      ],
+      "lead": [
+        [
+          0.1,
+          0.6,
+          74
+        ],
+        [
+          0.7,
+          1.2,
+          76
+        ],
+        [
+          1.3,
+          1.7999999999999998,
+          72
+        ],
+        [
+          1.9,
+          2.4,
+          74
+        ]
+      ],
+      "ambiguous": false,
+      "audio_sha256": "4724ed4988ca83e1c5b08feaa1327a0cb28fb1e939907be485492b495a4a2ec1",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.07858008399853134,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 52.93720459149223,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.4295489659998566,
+          "pitchSetPrecisionPct": 70.80838323353294,
+          "pitchSetRecallPct": 63.87575962187711,
+          "designatedLeadRecallPct": 23.367198838896954,
+          "coreLeadRecallPct": 24.86388384754991,
+          "omittedFrames": 103,
+          "alignmentSeconds": 0.1172627019986976
+        },
+        "BasicPitch": {
+          "seconds": 0.05378396100059035,
+          "pitchSetPrecisionPct": 67.67261088248742,
+          "pitchSetRecallPct": 99.932478055368,
+          "designatedLeadRecallPct": 99.85486211901306,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    },
+    {
+      "name": "A-strong-third",
+      "reference": [
+        [
+          0.2,
+          2.5,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.2,
+          2.5,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "sources": [
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 55,
+          "partials": [
+            [
+              1,
+              0.2
+            ],
+            [
+              2,
+              0.4
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.3
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        }
+      ],
+      "audio_sha256": "ae58a4574520ac18ed960769e486c9f7176d1834dd1ff3f32b04cdfecde01a44",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09461755399752292,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 98.86506935687264,
+          "designatedLeadRecallPct": 98.86506935687264,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5327361079980619,
+          "pitchSetPrecisionPct": 48.56093080220453,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 137,
+          "alignmentSeconds": 0.12446261700097239
+        },
+        "BasicPitch": {
+          "seconds": 0.052968551997764735,
+          "pitchSetPrecisionPct": 19.68230330106726,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    },
+    {
+      "name": "B-real-pair-modulated",
+      "reference": [
+        [
+          0.2,
+          2.5,
+          55
+        ],
+        [
+          0.2,
+          2.5,
+          74
+        ]
+      ],
+      "lead": [
+        [
+          0.2,
+          2.5,
+          74
+        ]
+      ],
+      "ambiguous": false,
+      "sources": [
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 55,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 5,
+          "rate": 4.2,
+          "hz": null
+        },
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 74,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.45,
+          "vibrato": 35,
+          "rate": 5.5,
+          "hz": null
+        }
+      ],
+      "audio_sha256": "26676b5968d8feaa256229ed2e2968f815dbb17126479787445d9dd2c6250ad6",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09407153199936147,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 49.558638083228246,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5981486450000375,
+          "pitchSetPrecisionPct": 94.85645933014354,
+          "pitchSetRecallPct": 50.0,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0,
+          "omittedFrames": 136,
+          "alignmentSeconds": 0.1279608940021717
+        },
+        "BasicPitch": {
+          "seconds": 0.04594604299927596,
+          "pitchSetPrecisionPct": 32.80926768721556,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    },
+    {
+      "name": "C-real-pair-staggered",
+      "reference": [
+        [
+          0.2,
+          1.7,
+          55
+        ],
+        [
+          0.9,
+          2.5,
+          74
+        ]
+      ],
+      "lead": [
+        [
+          0.9,
+          2.5,
+          74
+        ]
+      ],
+      "ambiguous": false,
+      "sources": [
+        {
+          "start": 0.2,
+          "end": 1.7,
+          "midi": 55,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 0.9,
+          "end": 2.5,
+          "midi": 74,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.45,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        }
+      ],
+      "audio_sha256": "d582b9a4099a5bb04c441008d1453cb32d24b974b3326553f176e7470d4ad4d6",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.11201065399654908,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 48.12734082397004,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5515789519995451,
+          "pitchSetPrecisionPct": 95.11904761904762,
+          "pitchSetRecallPct": 74.812734082397,
+          "designatedLeadRecallPct": 51.17967332123412,
+          "coreLeadRecallPct": 51.25725338491296,
+          "omittedFrames": 138,
+          "alignmentSeconds": 0.12614760499855038
+        },
+        "BasicPitch": {
+          "seconds": 0.047124807999352925,
+          "pitchSetPrecisionPct": 25.747348119575697,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    },
+    {
+      "name": "D-identical-observation",
+      "reference": [
+        [
+          0.2,
+          2.5,
+          55
+        ],
+        [
+          0.2,
+          2.5,
+          74
+        ]
+      ],
+      "lead": [
+        [
+          0.2,
+          2.5,
+          74
+        ]
+      ],
+      "ambiguous": true,
+      "sources": [
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 55,
+          "partials": [
+            [
+              1,
+              0.8
+            ],
+            [
+              2,
+              0.3
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.1
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 74,
+          "partials": [
+            [
+              1,
+              0.35
+            ],
+            [
+              2,
+              0.1
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": 587.9931539726239
+        }
+      ],
+      "audio_sha256": "3d9aadc2038f8d87ad67966f2fa6a613dbedcc0a755c7657a9a5cd78ac269c9e",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.0899596900017059,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 49.43253467843632,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.4854649939989031,
+          "pitchSetPrecisionPct": 48.56093080220453,
+          "pitchSetRecallPct": 50.0,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0,
+          "omittedFrames": 136,
+          "alignmentSeconds": 0.12517182500232593
+        },
+        "BasicPitch": {
+          "seconds": 0.044326743998681195,
+          "pitchSetPrecisionPct": 48.16997518610422,
+          "pitchSetRecallPct": 97.91929382093316,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    },
+    {
+      "name": "E-missing-fundamental",
+      "reference": [
+        [
+          0.2,
+          2.5,
+          55
+        ]
+      ],
+      "lead": [
+        [
+          0.2,
+          2.5,
+          55
+        ]
+      ],
+      "ambiguous": false,
+      "sources": [
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 55,
+          "partials": [
+            [
+              2,
+              0.6
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              0.3
+            ],
+            [
+              5,
+              0.2
+            ],
+            [
+              6,
+              0.25
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        }
+      ],
+      "audio_sha256": "3f32a51f446333fd743705c6eada08f9c8160ffaa5026bff989e57c7cbfc429b",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.08848376799869584,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 98.86506935687264,
+          "designatedLeadRecallPct": 98.86506935687264,
+          "coreLeadRecallPct": 100.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.5144425010003033,
+          "pitchSetPrecisionPct": 48.59068627450981,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0,
+          "omittedFrames": 137,
+          "alignmentSeconds": 0.12323909599945182
+        },
+        "BasicPitch": {
+          "seconds": 0.04499763499916298,
+          "pitchSetPrecisionPct": 0.0,
+          "pitchSetRecallPct": 0.0,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        }
+      }
+    },
+    {
+      "name": "F-soft-high-lead",
+      "reference": [
+        [
+          0.2,
+          2.5,
+          55
+        ],
+        [
+          0.2,
+          0.61,
+          74
+        ],
+        [
+          0.66,
+          1.07,
+          76
+        ],
+        [
+          1.12,
+          1.53,
+          77
+        ],
+        [
+          1.58,
+          1.9900000000000002,
+          76
+        ],
+        [
+          2.04,
+          2.45,
+          74
+        ]
+      ],
+      "lead": [
+        [
+          0.2,
+          0.61,
+          74
+        ],
+        [
+          0.66,
+          1.07,
+          76
+        ],
+        [
+          1.12,
+          1.53,
+          77
+        ],
+        [
+          1.58,
+          1.9900000000000002,
+          76
+        ],
+        [
+          2.04,
+          2.45,
+          74
+        ]
+      ],
+      "ambiguous": false,
+      "sources": [
+        {
+          "start": 0.2,
+          "end": 2.5,
+          "midi": 55,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 1,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 0.2,
+          "end": 0.61,
+          "midi": 74,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.18,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 0.66,
+          "end": 1.07,
+          "midi": 76,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.18,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 1.12,
+          "end": 1.53,
+          "midi": 77,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.18,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 1.58,
+          "end": 1.9900000000000002,
+          "midi": 76,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.18,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        },
+        {
+          "start": 2.04,
+          "end": 2.45,
+          "midi": 74,
+          "partials": [
+            [
+              1,
+              0.65
+            ],
+            [
+              2,
+              0.35
+            ],
+            [
+              3,
+              0.25
+            ],
+            [
+              4,
+              0.2
+            ],
+            [
+              5,
+              0.15
+            ],
+            [
+              6,
+              0.1
+            ]
+          ],
+          "gain": 0.18,
+          "vibrato": 0,
+          "rate": 5,
+          "hz": null
+        }
+      ],
+      "audio_sha256": "256a6ecd9fe14e5062d937de1a948f3e21a964e5869922b47db5a30b32eedbcd",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 0.09078009400036535,
+          "pitchSetPrecisionPct": 100.0,
+          "pitchSetRecallPct": 52.298467688207865,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 0.6335903849976603,
+          "pitchSetPrecisionPct": 93.84615384615384,
+          "pitchSetRecallPct": 52.831445702864755,
+          "designatedLeadRecallPct": 0.0,
+          "coreLeadRecallPct": 0.0,
+          "omittedFrames": 136,
+          "alignmentSeconds": 0.13011487200128613
+        },
+        "BasicPitch": {
+          "seconds": 0.050115982001443626,
+          "pitchSetPrecisionPct": 27.729539996305192,
+          "pitchSetRecallPct": 100.0,
+          "designatedLeadRecallPct": 100.0,
+          "coreLeadRecallPct": 100.0
+        }
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": "0FCvzsVlXpQ",
+      "duration": 156.0,
+      "time_scale": 1.0,
+      "tuning_cents": 0.0,
+      "audio_sha256": "95cb0fb4d8f691dbdf7ba35b69dbf11e93b3af8eb7205358743e6d606301260a",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 9.82399550700211,
+          "frames": 53748,
+          "meanPolyphony": 1.1873930192751359,
+          "conflicts": [
+            {
+              "start": 1.126,
+              "end": 1.265,
+              "frames": 48,
+              "pitchFrameCounts": {
+                "55": 0,
+                "74": 0
+              }
+            },
+            {
+              "start": 3.124,
+              "end": 3.264,
+              "frames": 48,
+              "pitchFrameCounts": {
+                "55": 0,
+                "74": 0
+              }
+            },
+            {
+              "start": 5.134,
+              "end": 5.285,
+              "frames": 52,
+              "pitchFrameCounts": {
+                "55": 0,
+                "74": 0
+              }
+            },
+            {
+              "start": 7.132,
+              "end": 7.283,
+              "frames": 52,
+              "pitchFrameCounts": {
+                "55": 0,
+                "74": 0
+              }
+            }
+          ]
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 42.33696419400076,
+          "frames": 53748,
+          "meanPolyphony": 1.8608692416462007,
+          "conflicts": [
+            {
+              "start": 1.126,
+              "end": 1.265,
+              "frames": 48,
+              "pitchFrameCounts": {
+                "55": 48,
+                "74": 35
+              }
+            },
+            {
+              "start": 3.124,
+              "end": 3.264,
+              "frames": 48,
+              "pitchFrameCounts": {
+                "55": 48,
+                "74": 35
+              }
+            },
+            {
+              "start": 5.134,
+              "end": 5.285,
+              "frames": 52,
+              "pitchFrameCounts": {
+                "55": 48,
+                "74": 37
+              }
+            },
+            {
+              "start": 7.132,
+              "end": 7.283,
+              "frames": 52,
+              "pitchFrameCounts": {
+                "55": 48,
+                "74": 36
+              }
+            }
+          ],
+          "rawRetainedFrames": 53287,
+          "omittedFrames": 461,
+          "alignmentSeconds": 8.071222792998014
+        }
+      }
+    },
+    {
+      "id": "PJ1yqbr8Y50",
+      "duration": 173.18605442176872,
+      "time_scale": 1.0221768707482992,
+      "tuning_cents": -38.0,
+      "audio_sha256": "0c551282e85d38a7517af01fb2077d1f86a7f72ad3c0654a8831c14595486290",
+      "algorithms": {
+        "MultiPitchMelodia": {
+          "seconds": 10.053584758999932,
+          "frames": 58375,
+          "meanPolyphony": 1.063880085653105,
+          "conflicts": []
+        },
+        "MultiPitchKlapuri": {
+          "seconds": 44.33883041699664,
+          "frames": 58375,
+          "meanPolyphony": 1.847880085653105,
+          "conflicts": [],
+          "rawRetainedFrames": 57855,
+          "omittedFrames": 520,
+          "alignmentSeconds": 9.615525560999231
+        }
+      }
+    }
+  ],
+  "ambiguity_max_absolute_sample_error": 3.3230065366041117e-09,
+  "klapuri_clock_aligned": true,
+  "alignment_script_sha256": "49594e58cf5443444d9ddb4ea1b09bc5e3e0cd7710b960aa5dbf012d66d7632d",
+  "clock_helper_sha256": "50198949a34ca3f0b972633ff7b413714faaadd46b56c4e2a7cb32a7e78dd846"
+}

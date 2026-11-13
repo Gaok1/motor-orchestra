@@ -197,31 +197,48 @@ const LINE = {
   intC: 0.25, intK: 1,          // custo de interromper: fixo + por segundo que ainda soaria
   jumpC: 0.4, jump0: 7,         // custo por oitava de salto além de uma quinta
   phrase: 0.5,                  // depois de 0,5 s de silêncio, a frase recomeça sem custos
-  noteC: 0.02, minPlay: 0.08,   // custo por ataque; a nota interrompida soa pelo menos 80 ms
-  window: 12,                   // só olha 12 s para trás (desempenho)
+  noteC: 0.02, minPlay: 0.08,   // antes de interromper uma nota longa, deixa tocar 80 ms
 };
 const LEGATO = 0.12;            // buracos menores que isso na linha são preenchidos
 
-function bestChain(pool) {
-  const p = LINE, N = pool.length;
+// Um harmônico pode decair antes da fundamental ou unir dois re-ataques dela.
+// A evidência é o ataque próximo e a cobertura da mesma altura, não fins iguais.
+function harmonicCoverage(upper, interval, notes) {
+  let aligned = false, covered = 0;
+  for (const lower of notes) {
+    if (lower.midi !== upper.midi - interval || lower.strength <= upper.strength * 1.1) continue;
+    aligned ||= Math.abs(lower.start - upper.start) <= 0.06;
+    covered += Math.max(0, Math.min(lower.end, upper.end) - Math.max(lower.start, upper.start));
+  }
+  return aligned ? Math.min(1, covered / (upper.end - upper.start)) : 0;
+}
+
+function bestChain(pool, priority = () => 1, p = LINE) {
+  const N = pool.length;
   if (!N) return { chain: [], total: 0 };
-  const rate = pool.map((n) => Math.max(0.05, p.base + p.velW * (n.vel - 0.7)));
+  const rate = pool.map((n) => n.weight * priority(n));
   const F = new Float64Array(N), from = new Int32Array(N).fill(-1);
   const byEnd = [...pool.keys()].sort((a, b) => pool[a].end - pool[b].end);
+  const active = new Set();
   let ptr = 0, closedBest = 0, closedArg = -1;
   for (let j = 0; j < N; j++) {
     const nj = pool[j];
     // cadeias cuja última nota acabou há mais de `phrase` s: sem custo de transição
     while (ptr < N && pool[byEnd[ptr]].end + p.phrase <= nj.start) {
       const i = byEnd[ptr++];
+      active.delete(i);
       const v = F[i] + rate[i] * (pool[i].end - pool[i].start);
       if (v > closedBest) { closedBest = v; closedArg = i; }
     }
     let best = closedBest, arg = closedArg;
-    for (let i = j - 1; i >= 0; i--) {
+    // Só notas ainda próximas da frase; sustentações longas não desaparecem
+    // por causa de uma janela fixa medida a partir do ataque.
+    for (const i of active) {
       const ni = pool[i];
-      if (nj.start - ni.start > p.window) break;
-      if (ni.end + p.phrase <= nj.start || nj.start - ni.start < p.minPlay) continue;
+      // Uma nota curta completa pode levar à próxima: 80 ms é proteção contra
+      // cortes prematuros, não um limite de andamento para trinados/arpejos.
+      const minPlay = Math.min(p.minPlay, ni.end - ni.start);
+      if (nj.start - ni.start + 1e-9 < minPlay) continue;
       let v = F[i] + rate[i] * (Math.min(ni.end, nj.start) - ni.start) - p.noteC;
       const rest = ni.end - nj.start;
       if (rest > p.tail) v -= p.intC + p.intK * (rest - p.tail);
@@ -231,6 +248,7 @@ function bestChain(pool) {
     }
     F[j] = best;
     from[j] = arg;
+    active.add(j);
   }
   let end = -1, total = 0;
   for (let j = 0; j < N; j++) {
@@ -242,34 +260,429 @@ function bestChain(pool) {
   return { chain: chain.reverse(), total };
 }
 
+// Registro relativo à textura local, sem faixa MIDI fixa. Só vizinhas com
+// evidência suficiente votam: um harmônico agudo muito fraco não define o topo.
+// A janela acompanha mudanças de registro e considera notas longas ainda ativas.
+function melodyPriorities(pool) {
+  const priorities = new Map(), active = new Set();
+  let next = 0;
+  for (const n of pool) {
+    const t = n.start;
+    while (next < pool.length && pool[next].start <= t + 0.5) active.add(pool[next++]);
+    for (const other of active) if (other.end < t - 0.5) active.delete(other);
+    let strongest = 0;
+    for (const other of active) strongest = Math.max(strongest, other.strength);
+    const floor = Math.max(0.18, strongest * 0.5);
+    let below = 0, total = 0, pitchSum = 0, harmonicShadow = 1;
+    let previous = 0, following = 0, competing = false;
+    let prevNote = null, nextNote = null;
+    for (const other of active) {
+      if (other === n || other.strength < Math.max(0.12, n.strength * 0.6)) continue;
+      const proximity = Math.max(0, 1 - Math.abs(n.midi - other.midi) / 7);
+      if (other.start < n.start && Math.abs(other.end - n.start) <= 0.18 && proximity > previous) {
+        previous = proximity;
+        prevNote = other;
+      }
+      if (other.start > n.start && Math.abs(other.start - n.end) <= 0.18 && proximity > following) {
+        following = proximity;
+        nextNote = other;
+      }
+    }
+    const relations = new Map();
+    const relation = interval => {
+      if (!relations.has(interval)) {
+        const neighbors = [prevNote, nextNote].filter(Boolean);
+        const paired = neighbor => harmonicCoverage(neighbor, interval, active) >= 0.7;
+        relations.set(interval, {
+          independent: neighbors.some(neighbor => !paired(neighbor)),
+          parallel: neighbors.some(neighbor => neighbor.midi !== n.midi && paired(neighbor)),
+        });
+      }
+      return relations.get(interval);
+    };
+    for (const other of active) {
+      const interval = n.midi - other.midi;
+      const octave = interval >= 12 && interval % 12 === 0;
+      const overlap = Math.max(0, Math.min(n.end, other.end) - Math.max(n.start, other.start));
+      const overtoneInterval = [19, 28, 31].includes(interval);
+      const coverage = overtoneInterval ? harmonicCoverage(n, interval, active) : 0;
+      // 3º, 5º e 6º harmônicos arredondados ao semitom. Exige coincidência
+      // de ataques. Caudas diferentes também são aceitas se a frase vizinha
+      // acompanha a mesma fundamental: o harmônico pode decair antes dela.
+      const overtone = overtoneInterval && n.strength < other.strength * 0.75
+        && Math.abs(other.start - n.start) <= 0.06
+        && (Math.abs(other.end - n.end) <= 0.08 || coverage >= 0.7
+          && relation(interval).parallel && !relation(interval).independent);
+      if ((octave || overtone) && other.strength > n.strength * 1.1
+          && Math.abs(other.start - n.start) <= 0.25 && Math.abs(other.end - n.end) <= 0.25) {
+        // Coincidir com um harmônico numa nota do acorde não torna a frase
+        // inteira um harmônico. Se a vizinha aguda se move independentemente
+        // da voz grave, conserva a nota na linha melódica.
+        const { independent } = relation(interval);
+        // Uma cópia mais fraca, com ataque e fim próximos, pode ser um harmônico
+        // do transcritor ou um dobramento. Prefere a oitava com mais evidência.
+        if (!independent) harmonicShadow = Math.min(harmonicShadow, 1 - (overtone ? 0.97 * coverage : 0.85 * overlap / (n.end - n.start)));
+      }
+      if (other !== n && other.strength >= floor && other.start <= n.start && other.end >= n.end && interval > 7) competing = true;
+      if (other.strength < floor) continue;
+      const evidence = other.strength * Math.min(1, other.end - other.start);
+      total += evidence;
+      pitchSum += evidence * other.midi;
+      if (other.midi < n.midi) below += evidence;
+      else if (other.midi === n.midi) below += evidence * 0.5;
+    }
+    const rank = total ? below / total : 0.5;
+    const center = total ? pitchSum / total : n.midi;
+    // Só o percentil comprime as distâncias num acorde muito cheio: a melodia
+    // uma oitava acima precisa se distinguir da nota superior da sustentação.
+    const register = 2 ** Math.max(-2, Math.min(2, (n.midi - center) / 12));
+    const reliable = Math.min(1, n.strength / floor);
+    // O acompanhamento forte não pode fazer uma frase aguda suave parecer
+    // vários picos isolados. Vizinhas de intensidade semelhante sustentam a
+    // evidência da frase, mesmo abaixo do piso usado para estimar o registro.
+    const support = Math.max(previous, following);
+    let phraseStrength = n.strength;
+    for (const other of active) if (Math.abs(other.midi - n.midi) <= 7) {
+      phraseStrength = Math.max(phraseStrength, other.strength);
+    }
+    const phraseConfidence = Math.min(1, n.strength / Math.max(0.18, phraseStrength * 0.5));
+    const confidence = reliable ** 4 * (1 - support) + phraseConfidence * support;
+    // Um pico agudo curto isolado não deve cortar uma frase sustentada.
+    // Uma sequência rápida com vizinhas próximas conserva sua prioridade.
+    const continuity = competing && n.end - n.start < 0.3 ? 0.15 + 0.85 * support : 1;
+    priorities.set(n, (0.15 + 3.85 * rank ** 3 * register * confidence) * harmonicShadow * continuity);
+  }
+  return priorities;
+}
+
+// Dobramentos em oitavas com o mesmo ataque têm menos valor depois de já
+// representados. Não apaga notas nem penaliza uma linha independente só por
+// compartilhar a classe de altura. O baixo continua concorrendo sem esse desconto.
+function octaveRedundancy(note, tracks) {
+  let overlap = 0;
+  for (const track of tracks) {
+    let lo = 0, hi = track.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (track[mid].start < note.start - 0.08) lo = mid + 1;
+      else hi = mid;
+    }
+    for (let i = lo; i < track.length && track[i].start <= note.start + 0.08; i++) {
+      const sounding = track[i];
+      if (sounding.midi === note.midi || (sounding.midi - note.midi) % 12 !== 0) continue;
+      overlap = Math.max(overlap, Math.max(0, Math.min(sounding.end, note.end)
+        - Math.max(sounding.start, note.start)) / (note.end - note.start));
+    }
+  }
+  return 1 - 0.65 * overlap;
+}
+
+// Notas da linha que soam entre `start` e `end`. As notas de uma linha não se
+// sobrepõem, então os fins também estão em ordem crescente.
+function overlapping(track, start, end) {
+  let lo = 0, hi = track.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (track[mid].end <= start) lo = mid + 1;
+    else hi = mid;
+  }
+  const out = [];
+  for (let i = lo; i < track.length && track[i].start < end; i++) out.push(track[i]);
+  return out;
+}
+
+// Acompanhamento pela função no acorde: a classe de altura que já soa em outra
+// linha vale o mesmo que um dobramento (35%), durante a sobreposição, mesmo
+// sem ataque simultâneo. O trecho novo ganha mais se for terça ou sétima acima
+// da voz mais grave, que definem o acorde; a quinta e o uníssono não ganham.
+function chordRole(note, tracks) {
+  const spans = [], mid = (note.start + note.end) / 2;
+  let bass = null;
+  for (const track of tracks) for (const other of overlapping(track, note.start, note.end)) {
+    if ((other.midi - note.midi) % 12 === 0) spans.push([Math.max(other.start, note.start), Math.min(other.end, note.end)]);
+    if (other.start <= mid && other.end > mid && (!bass || other.midi < bass.midi)) bass = other;
+  }
+  spans.sort((a, b) => a[0] - b[0]);
+  let covered = 0, from = note.start, to = note.start;
+  for (const [a, b] of spans) {
+    if (a > to) { covered += to - from; from = a; to = b; }
+    else to = Math.max(to, b);
+  }
+  covered = (covered + to - from) / (note.end - note.start);
+  const interval = bass ? (((note.midi - bass.midi) % 12) + 12) % 12 : null;
+  const bonus = interval === null || interval === 0 || interval === 7 ? 0 : [3, 4, 10, 11].includes(interval) ? 0.3 : 0.15;
+  return 0.35 * covered + (1 - covered) * (1 + bonus);
+}
+
+// Perfis de tonalidade de Krumhansl-Kessler, em Dó. A escala menor inclui a
+// sensível da menor harmônica.
+const KEY_PROFILES = [
+  { profile: [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88], scale: [0, 2, 4, 5, 7, 9, 11] },
+  { profile: [6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17], scale: [0, 2, 3, 5, 7, 8, 10, 11] },
+];
+const KEY_BLOCK = 4, KEY_SUPPORT = 0.25;
+
+function correlation(a, b) {
+  const ma = a.reduce((s, x) => s + x) / a.length, mb = b.reduce((s, x) => s + x) / b.length;
+  let num = 0, da = 0, db = 0;
+  for (let i = 0; i < a.length; i++) {
+    num += (a[i] - ma) * (b[i] - mb);
+    da += (a[i] - ma) ** 2;
+    db += (b[i] - mb) ** 2;
+  }
+  return da && db ? num / Math.sqrt(da * db) : 0;
+}
+
+// Classes de altura da tonalidade que melhor explica o croma, ou null sem notas.
+function keyScale(chroma) {
+  if (!chroma.some(x => x > 1e-9)) return null;
+  let best = -Infinity, scale = null;
+  for (let tonic = 0; tonic < 12; tonic++) {
+    const rotated = chroma.map((_, i) => chroma[(i + tonic) % 12]);
+    for (const key of KEY_PROFILES) {
+      const r = correlation(key.profile, rotated);
+      if (r > best) { best = r; scale = key.scale.map(d => (d + tonic) % 12); }
+    }
+  }
+  return new Set(scale);
+}
+
+// Notas fracas fora da tonalidade local costumam ser harmônicos, vazamento da
+// bateria ou erros do transcritor. Na seleção valem até 50% menos; volume e
+// afinação não mudam. A tonalidade vem de blocos de 4 s numa janela de 12 s,
+// com as notas fortes pesando mais. Uma nota forte da mesma classe de altura
+// por perto (acorde emprestado, cromatismo em outra voz) retira a penalidade.
+// Notas a partir de 0,45 de intensidade nunca perdem valor.
+function harmonicFit(pool) {
+  const fit = new Map(), scales = [], chroma = Array(12).fill(0);
+  const evidence = n => n.strength ** 2 * Math.min(2, n.end - n.start);
+  const last = pool.reduce((t, n) => Math.max(t, n.start), 0);
+  let lo = 0, hi = 0;
+  for (let w = 0; w <= last; w += KEY_BLOCK) {
+    while (hi < pool.length && pool[hi].start < w + 2 * KEY_BLOCK) chroma[pool[hi].midi % 12] += evidence(pool[hi++]);
+    while (lo < hi && pool[lo].start < w - KEY_BLOCK) chroma[pool[lo].midi % 12] -= evidence(pool[lo++]);
+    scales.push(keyScale(chroma));
+  }
+  const strong = Array.from({ length: 12 }, () => []);
+  for (const n of pool) if (n.strength >= 0.45) strong[n.midi % 12].push(n);
+  for (const n of pool) {
+    const weakness = Math.max(0, Math.min(1, (0.45 - n.strength) / 0.15));
+    const scale = scales[Math.floor(n.start / KEY_BLOCK)];
+    if (!weakness || !scale || scale.has(n.midi % 12)) continue;
+    if (strong[n.midi % 12].some(o => o.start < n.end + KEY_SUPPORT && o.end > n.start - KEY_SUPPORT)) continue;
+    fit.set(n, 1 - 0.5 * weakness);
+  }
+  return fit;
+}
+
+// Cópias da melodia uma oitava abaixo concorrem com as notas restantes a partir
+// da terceira linha, valendo uma fração da nota original: um motor de
+// acompanhamento dobra a melodia em vez de tocar notas fracas. Com driver sem
+// controle de corrente (A4988), o volume da melodia vem do número de motores.
+// A cópia fica acima da segunda linha e não coincide com nenhuma nota preparada
+// de mesma altura, já escolhida ou não, na duração original: a recuperação de
+// sustentações pode devolver a cauda inteira a uma nota cortada.
+const DOUBLE_VALUE = 0.7, DOUBLE_FLOOR = 36, DOUBLE_GAIN = 0.8;
+function melodyDoubles(leadChain, second, notes) {
+  const byPitch = new Map();
+  for (const n of notes) {
+    if (!byPitch.has(n.midi)) byPitch.set(n.midi, []);
+    byPitch.get(n.midi).push(n);
+  }
+  const copies = leadChain.flatMap((n, k) => {
+    const midi = n.midi - 12, end = leadChain[k + 1] ? Math.min(n.end, leadChain[k + 1].start) : n.end;
+    if (midi < DOUBLE_FLOOR || end - n.start < 0.03) return [];
+    if (overlapping(second, n.start, end).some(o => o.midi >= midi)) return [];
+    if ((byPitch.get(midi) ?? []).some(o => o.start < end && o.end > n.start)) return [];
+    return [{ start: n.start, end, midi, vel: n.vel * DOUBLE_GAIN, weight: n.weight * DOUBLE_VALUE,
+      strength: n.strength, curve: n.curve, span: n.span, nextSamePitch: Infinity, double: true }];
+  });
+  // O legato não pode atravessar o ataque de outra nota da mesma altura, seja
+  // cópia ou nota da transcrição: cada uma pode ir para um motor diferente.
+  for (const copy of copies) for (const other of [...(byPitch.get(copy.midi) ?? []), ...copies]) {
+    if (other.midi !== copy.midi) continue;
+    if (other.start >= copy.end) copy.nextSamePitch = Math.min(copy.nextSamePitch, other.start);
+    if (copy.start >= other.end) other.nextSamePitch = Math.min(other.nextSamePitch, copy.start);
+  }
+  return copies;
+}
+
 // Opções (desligadas por padrão):
 //   bends: a nota segue a curva fina de afinação do transcritor (vibrato, deslizes); o motor não
 //          está preso a semitons. A curva vale para a duração original da nota (span).
 //   mix:   cada linha extra toca mais baixo, na proporção da raiz do valor dela em relação à
 //          linha 1, para a textura não embolar a melodia (mínimo 35%).
-export function dynamicLines(notes, motors, { bends = false, mix = false } = {}) {
-  let pool = notes.map(([start, end, midi, amp, curve]) => ({ start, end, midi, vel: Math.min(1, 0.4 + 0.8 * amp), curve }))
+//   balance (ligado): bônus suave para uma segunda voz abaixo da primeira, sem
+//          faixa MIDI fixa nem reserva obrigatória de motor para baixo.
+//   salience (ligado): usa a intensidade original antes do limite de volume e
+//          reduz suavemente o valor de detecções fracas, sem descartá-las.
+//   sustain (ligado): transfere sustentações cortadas para um motor disponível.
+//   continuity (ligado): reconecta frases entre motores sem alterar as notas
+//          selecionadas nem aumentar pausas curtas; preserva a primeira linha na redução.
+//   melody: favorece uma frase no registro superior da textura; fundamento na
+//          segunda linha e menos dobramentos nas demais. Heurística, não separação de fontes.
+//   harmony: notas fracas fora da tonalidade local, sem apoio de nota forte da
+//          mesma classe por perto, valem até 50% menos na seleção.
+//   voicing (com melody): a partir da terceira linha, classes de altura que já
+//          soam valem menos durante toda a sobreposição; terças e sétimas acima
+//          da voz mais grave valem mais.
+//   double (com melody): a partir da terceira linha, a melodia uma oitava abaixo
+//          concorre com as notas restantes. Essas cópias levam `double: true`.
+export function dynamicLines(notes, motors, { bends = false, mix = false, balance = true, salience = true, sustain = true, melody = false, continuity = true, harmony = false, voicing = false, double = false } = {}) {
+  let pool = prepareLineNotes(notes, salience)
     .sort((a, b) => a.start - b.start || b.vel - a.vel);
-  const tracks = [];
-  let first = 0;
+  const prepared = pool;
+  const leadPriority = melody ? melodyPriorities(pool) : null;
+  const fit = harmony ? harmonicFit(pool) : null;
+  const tracks = [], origins = new Map();
+  let first = 0, leadChain = [];
   for (let m = 0; m < motors; m++) {
-    const { chain, total } = bestChain(pool);
-    if (m === 0) first = total;
-    const gain = mix && first > 0 ? Math.min(1, Math.max(0.35, Math.sqrt(total / first))) : 1;
+    if (double && melody && m === 2) {
+      pool = [...pool, ...melodyDoubles(leadChain, tracks[1], prepared)].sort((a, b) => a.start - b.start || b.vel - a.vel);
+    }
+    const role = melody && m === 0 ? n => leadPriority.get(n) : balance && m === 1 ? (n) => {
+      const lead = noteAt(tracks[0], (n.start + n.end) / 2);
+      // Uma quinta abaixo começa a ganhar valor; a 19 semitons o bônus chega
+      // a 30% nas linhas dinâmicas, 100% na redução. Silêncios e uma primeira
+      // linha já grave não forçam outro baixo.
+      return lead ? 1 + (melody ? 1 : 0.3) * Math.max(0, Math.min(1, (lead.midi - n.midi - 7) / 12)) : 1;
+    } : melody && m >= 2 ? n => (n.double ? 1 : voicing ? chordRole(n, tracks) : octaveRedundancy(n, tracks)) : undefined;
+    const priority = fit ? n => (role ? role(n) : 1) * (fit.get(n) ?? 1) : role;
+    const params = melody && m === 0 ? { ...LINE, intC: 0.1, intK: 0.25, jumpC: 1.6, jump0: 5, noteC: 0.005 } : LINE;
+    const { chain, total } = bestChain(pool, priority, params);
+    // Bônus de seleção não são volume: compara as linhas na mesma escala.
+    const value = melody ? chain.reduce((sum, n, k) => sum + n.weight *
+      ((chain[k + 1] ? Math.min(n.end, chain[k + 1].start) : n.end) - n.start), 0) : total;
+    if (m === 0) { first = value; leadChain = chain; }
+    const gain = mix && first > 0 ? Math.min(1, Math.max(0.35, Math.sqrt(value / first))) : 1;
     const used = new Set(chain);
     pool = pool.filter((n) => !used.has(n));
     const line = chain.map((n, k) => {
       const note = { midi: n.midi, start: n.start, end: chain[k + 1] ? Math.min(n.end, chain[k + 1].start) : n.end, vel: n.vel * gain };
-      if (bends && n.curve) Object.assign(note, { bends: n.curve, span: n.end - n.start });
+      if (bends && n.curve?.length) Object.assign(note, { bends: n.curve, span: n.span });
+      if (n.double) note.double = true;
+      origins.set(note, n.end);
       return note;
     });
     for (let k = 0; k < line.length - 1; k++) {
       const gap = line[k + 1].start - line[k].end;
-      if (gap > 0 && gap <= LEGATO) line[k].end = line[k + 1].start;
+      const a = line[k], b = line[k + 1];
+      // Não transforma staccato rápido em sustentação, nem preenche pausas
+      // entre registros distantes. Nunca estende por cima de outro ataque uníssono.
+      const limit = Math.min(LEGATO, (a.end - a.start) * 0.5, (b.end - b.start) * 0.5);
+      if (gap > 0 && gap <= limit && Math.abs(a.midi - b.midi) <= 7) {
+        a.end = Math.min(b.start, chain[k].nextSamePitch);
+      }
     }
     tracks.push(articulate(line));
   }
+  if (sustain) restoreSustains(tracks, origins, melody);
+  if (continuity) connectVoices(tracks, melody ? 1 : 0);
   return tracks;
+}
+
+// A seleção gulosa pode deixar a continuação de uma frase em outro motor.
+// Troca somente sufixos inteiros em fronteiras livres nos dois motores. Assim
+// preserva todas as notas selecionadas, suas durações, volume e vibrato, sem
+// interromper uma nota, inventar ataques ou esticar silêncios. A melodia é fixa.
+function connectVoices(tracks, first) {
+  const shortBreak = (a, b) => a && b && b.start - a.end > 0.03 && b.start - a.end < 0.3 ? 1 : 0;
+  const cost = (a, b) => {
+    if (!a || !b) return 0.6; // começo/fim de uma linha
+    const gap = b.start - a.end;
+    if (gap >= 0.8) return 1.2; // outra frase: sem identidade imposta entre elas
+    return gap / 0.8 + Math.min(3, Math.abs(a.midi - b.midi) / 12);
+  };
+  const times = [...new Set(tracks.slice(first).flatMap(t => t.map(n => n.start)))].sort((a, b) => a - b);
+  const positions = tracks.map(() => 0);
+  for (const time of times) {
+    for (let a = first; a < tracks.length; a++) {
+      while (positions[a] < tracks[a].length && tracks[a][positions[a]].start < time) positions[a]++;
+    }
+    for (let a = first; a < tracks.length; a++) for (let b = a + 1; b < tracks.length; b++) {
+      const i = positions[a], j = positions[b];
+      const ap = tracks[a][i - 1], an = tracks[a][i], bp = tracks[b][j - 1], bn = tracks[b][j];
+      if (ap?.end > time || bp?.end > time) continue;
+      // Sem passado nos dois lados, a troca apenas renomearia os motores.
+      if (!ap && !bp) continue;
+      // Proximidade de altura sozinha pode transformar uma linha contínua em
+      // várias pausas curtas. Nunca aceita esse aumento de fragmentação.
+      if (shortBreak(ap, bn) + shortBreak(bp, an) > shortBreak(ap, an) + shortBreak(bp, bn)) continue;
+      const before = cost(ap, an) + cost(bp, bn), after = cost(ap, bn) + cost(bp, an);
+      if (after + 1e-9 >= before) continue;
+      const tailA = tracks[a].splice(i), tailB = tracks[b].splice(j);
+      tracks[a].push(...tailB);
+      tracks[b].push(...tailA);
+    }
+  }
+  // Atualiza só a articulação, sem alterar durações após a troca de vozes.
+  for (let m = first; m < tracks.length; m++) for (let i = 0; i < tracks[m].length; i++) {
+    const n = tracks[m][i], prev = tracks[m][i - 1];
+    delete n.reattack;
+    if (prev && prev.midi === n.midi && n.start - prev.end < REATTACK) n.reattack = true;
+  }
+}
+
+// A seleção gulosa pode cortar uma nota para iniciar outra mesmo havendo um
+// motor livre. Move a nota inteira, desde seu ataque real, para caber a cauda.
+// Nunca interrompe outra voz nem prolonga além do fim estimado da transcrição.
+function restoreSustains(tracks, origins, preserveLead = false) {
+  const candidates = tracks.slice(preserveLead ? 1 : 0).flat().filter(n => origins.get(n) - n.end > LINE.tail)
+    .sort((a, b) => (origins.get(b) - b.end) * b.vel - (origins.get(a) - a.end) * a.vel);
+  for (const note of candidates) {
+    const source = tracks.find(track => track.includes(note)), end = origins.get(note);
+    let best = null, cost = Infinity;
+    for (const track of tracks) {
+      if (preserveLead && track === tracks[0]) continue;
+      if (track === source || track.some(n => n.start < end && n.end > note.start)) continue;
+      const prev = track.findLast(n => n.end <= note.start);
+      const next = track.find(n => n.start >= end);
+      const transition = (prev && note.start - prev.end < LINE.phrase ? Math.abs(prev.midi - note.midi) : 0)
+        + (next && next.start - end < LINE.phrase ? Math.abs(next.midi - note.midi) : 0);
+      if (transition < cost) { best = track; cost = transition; }
+    }
+    if (!best) continue;
+    source.splice(source.indexOf(note), 1);
+    note.end = end;
+    best.push(note);
+    best.sort((a, b) => a.start - b.start);
+  }
+  // Re-ataques dependem dos vizinhos no motor de destino.
+  for (const track of tracks) {
+    for (const note of track) delete note.reattack;
+    articulate(track);
+  }
+}
+
+// Um motor já reproduz um uníssono: duplicatas não devem consumir vozes extras.
+// Um ataque posterior da mesma altura encerra a cauda anterior, mas continua
+// sendo um ataque real; não juntamos notas repetidas nem inventamos reinícios.
+function prepareLineNotes(notes, salience) {
+  const pitches = new Map();
+  for (const [start, end, midi, amp, curve] of notes) {
+    if (![start, end, midi, amp].every(Number.isFinite) || start < 0 || end - start < 0.03
+        || midi < 0 || midi > 127) continue;
+    const strength = Math.max(0, Math.min(1, amp));
+    const vel = Math.min(1, 0.4 + 0.8 * strength);
+    // O volume satura a partir de amp=0,75; isso não pode apagar diferenças
+    // na seleção. A intensidade da rede é evidência, não probabilidade calibrada.
+    const weight = salience ? (0.4 + 1.6 * strength) * Math.min(1, 0.25 + 1.25 * strength)
+      : Math.max(0.05, LINE.base + LINE.velW * (vel - 0.7));
+    const note = { start, end, midi, vel, weight, strength, curve, span: end - start };
+    if (!pitches.has(midi)) pitches.set(midi, []);
+    pitches.get(midi).push(note);
+  }
+  const out = [];
+  for (const group of pitches.values()) {
+    group.sort((a, b) => a.start - b.start || b.weight - a.weight || b.end - a.end);
+    const unique = group.filter((n, i) => i === 0 || n.start !== group[i - 1].start);
+    unique.forEach((n, i) => {
+      n.nextSamePitch = unique[i + 1]?.start ?? Infinity;
+      n.end = Math.min(n.end, n.nextSamePitch);
+      if (n.end - n.start >= 0.03) out.push(n);
+    });
+  }
+  return out;
 }
 
 // Altura (MIDI fracionário) de uma nota com curva de afinação no instante t da partitura.
@@ -303,15 +716,17 @@ export function percussionTrack(drums) {
   return out;
 }
 
-// Arranjo completo para N motores. Métodos: 'linhas' (linhas dinâmicas sobre as notas do
-// basic-pitch, na densidade escolhida) e 'papeis' (melodia/harmonia/baixo). Com percussão, o
+// Arranjo completo para N motores. Métodos: 'melodia' (redução com prioridade melódica),
+// 'linhas' (linhas dinâmicas) e 'papeis' (melodia/harmonia/baixo). Com percussão, o
 // último motor vira percussão.
-export function arrangeMotors(job, motors, { method = 'linhas', density = 'media', percussion = true, threshold, bends = false, mix = false } = {}) {
+export function arrangeMotors(job, motors, { method = 'linhas', density = 'media', percussion = true, threshold, bends = false, mix = false, balance = true, salience = true, sustain = true, continuity = true, harmony = false, voicing = false, double = false } = {}) {
   const drums = percussion && motors >= 2 && job.drums?.length ? job.drums : null;
   const tonal = drums ? motors - 1 : motors;
   let tracks, roles;
-  if (method === 'linhas') {
-    tracks = dynamicLines(job.density?.[density] ?? job.notes, tonal, { bends, mix });
+  if (method === 'linhas' || method === 'melodia') {
+    const candidates = job.density?.[density] ?? job.notes;
+    const notes = threshold === undefined ? candidates : candidates.filter(n => n[3] >= threshold);
+    tracks = dynamicLines(notes, tonal, { bends, mix, balance, salience, sustain, continuity, harmony, voicing, double, melody: method === 'melodia' });
     roles = tracks.map(() => '');
   } else {
     ({ tracks, roles } = arrange(job, tonal, { threshold }));

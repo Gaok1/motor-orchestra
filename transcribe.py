@@ -7,6 +7,8 @@ navegador (score.mjs).
 """
 
 import logging
+from contextlib import contextmanager
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 
@@ -15,6 +17,56 @@ MIN_FREQ = 30.0
 MAX_FREQ = 4200.0
 # (limiar de ataque, limiar de quadro) do basic-pitch; "normal" é o padrão da biblioteca.
 DENSITIES = {"normal": (0.5, 0.3), "media": (0.35, 0.2), "alta": (0.25, 0.15)}
+
+
+def _tuning_offset(audio, sr):
+    """Desvio global em semitons, só quando os picos têm afinação coerente.
+
+    Um sinal entre dois semitons espalha a ativação da rede por duas notas e
+    corta sustentações. Usa até 40 s distribuídos pela faixa; vibrato, ruído e
+    instrumentos inarmônicos não devem impor uma correção global arbitrária.
+    """
+    import librosa
+
+    size = 8 * sr
+    if len(audio) > 5 * size:
+        starts = np.linspace(0, len(audio) - size, 5, dtype=int)
+        audio = np.concatenate([audio[start:start + size] for start in starts])
+    pitches, magnitudes = librosa.piptrack(
+        y=audio, sr=sr, n_fft=4096, hop_length=1024,
+        fmin=150, fmax=4000, threshold=0.3,
+    )
+    mask = pitches > 0
+    if not mask.any():
+        return 0.0
+    mask &= magnitudes >= np.median(magnitudes[mask])
+    frequencies, weights = pitches[mask], magnitudes[mask]
+    tuning = float(librosa.pitch_tuning(frequencies, resolution=0.01))
+    residual = (librosa.hz_to_midi(frequencies) - tuning + 0.5) % 1 - 0.5
+    concentration = weights[np.abs(residual) < 0.1].sum() / weights.sum()
+    return tuning if abs(tuning) >= 0.15 and concentration >= 0.5 else 0.0
+
+
+@contextmanager
+def _inference_input(wav_path):
+    """Afina apenas a entrada da rede; devolve a escala dos tempos originais.
+
+    Trocar a taxa do WAV temporário muda altura e duração juntas, sem vocoder.
+    Os tempos detectados são multiplicados pela mesma razão para acompanhar o
+    áudio original. O arquivo baixado nunca é alterado.
+    """
+    import librosa
+    import soundfile as sf
+
+    audio, sr = librosa.load(wav_path, sr=22050, mono=True)
+    tuning = _tuning_offset(audio, sr)
+    if not tuning:
+        yield wav_path, 1.0, 0.0
+        return
+    corrected_sr = round(sr * 2 ** (-tuning / 12))
+    with NamedTemporaryFile(suffix=".wav", prefix="orchestra-tuned-") as temporary:
+        sf.write(temporary.name, audio, corrected_sr, subtype="FLOAT")
+        yield temporary.name, corrected_sr / sr, tuning
 
 
 def _fine_curve(contours, s, e, midi, half=4):
@@ -65,7 +117,7 @@ SPLIT_MAX_GAP = 3        # quadros (~35 ms) entre os pedaços
 SPLIT_MAX_ONSET = 0.7
 
 
-def _merge_splits(notes, onsets):
+def _merge_splits(notes, onsets, frames=None):
     by_pitch = {}
     for s, e, pitch, amp in notes:
         by_pitch.setdefault(pitch, []).append([s, e, pitch, amp])
@@ -75,13 +127,59 @@ def _merge_splits(notes, onsets):
         cur = run[0]
         for nxt in run[1:]:
             attack = onsets[max(0, nxt[0] - 1):nxt[0] + 2, pitch - 21].max()
-            if nxt[0] - cur[1] <= SPLIT_MAX_GAP and attack < SPLIT_MAX_ONSET:
-                cur = [cur[0], nxt[1], pitch, max(cur[3], nxt[3])]
+            # Um novo ataque moderado após uma queda real de energia é uma
+            # repetição, mesmo abaixo de 0,7. Não apaga articulação de notas suaves.
+            valley = False
+            if frames is not None and attack >= 0.35:
+                boundary = frames[max(cur[0], nxt[0] - 3):nxt[0] + 1, pitch - 21]
+                valley = boundary.size > 0 and boundary.min() < 0.5 * min(cur[3], nxt[3])
+            if nxt[0] - cur[1] <= SPLIT_MAX_GAP and attack < SPLIT_MAX_ONSET and not valley:
+                # Intensidade média, não o máximo de um fragmento: evita promover
+                # uma sustentação fraca só porque um pedaço saiu mais forte.
+                end = max(cur[1], nxt[1])
+                amp = float(frames[cur[0]:end, pitch - 21].mean()) if frames is not None else max(cur[3], nxt[3])
+                cur = [cur[0], end, pitch, amp]
             else:
                 merged.append(cur)
                 cur = nxt
         merged.append(cur)
     return merged
+
+
+def _decode_notes(output, onset, frame):
+    """Mantém a decodificação longa e recupera notas curtas com ataque explícito.
+
+    Baixar o mínimo global também aceitaria resíduos sem ataque. A segunda
+    passagem exige ataque explícito (>=0,35), energia >=0,2 e respeita os limiares
+    mais altos das outras densidades. Não usa o resíduo melodia_trick.
+    Não substitui nem recorta eventos já encontrados pela passagem normal.
+    """
+    from basic_pitch.note_creation import output_to_notes_polyphonic
+
+    def decode(**options):
+        # constrain_frequency da biblioteca altera seus argumentos in-place.
+        return output_to_notes_polyphonic(
+            output["note"].copy(), output["onset"].copy(),
+            max_freq=MAX_FREQ, min_freq=MIN_FREQ, **options,
+        )
+
+    notes = decode(onset_thresh=onset, frame_thresh=frame, min_note_len=11,
+                   infer_onsets=True, melodia_trick=True)
+    short = decode(onset_thresh=max(0.35, onset), frame_thresh=max(0.2, frame),
+                   min_note_len=4, energy_tol=3, infer_onsets=False, melodia_trick=False)
+    by_pitch = {}
+    for n in notes:
+        by_pitch.setdefault(n[2], []).append(n)
+    for s, e, pitch, amp in short:
+        if e - s > 11 or amp < max(0.2, frame):
+            continue
+        existing = by_pitch.setdefault(pitch, [])
+        if any(s < b and e > a for a, b, *_ in existing):
+            continue
+        note = (s, e, pitch, amp)
+        notes.append(note)
+        existing.append(note)
+    return _merge_splits(notes, output["onset"], output["note"])
 
 
 def transcribe(wav_path):
@@ -91,29 +189,27 @@ def transcribe(wav_path):
     try:
         from basic_pitch import ICASSP_2022_MODEL_PATH
         from basic_pitch.inference import Model, predict
-        from basic_pitch.note_creation import model_frames_to_time, output_to_notes_polyphonic
+        from basic_pitch.note_creation import model_frames_to_time
     finally:
         logging.disable(logging.NOTSET)
 
     import librosa
 
-    output, _, _ = predict(
-        str(wav_path), Model(ICASSP_2022_MODEL_PATH),
-        minimum_frequency=MIN_FREQ, maximum_frequency=MAX_FREQ,
-    )
+    with _inference_input(wav_path) as (input_path, time_scale, tuning):
+        output, _, _ = predict(
+            str(input_path), Model(ICASSP_2022_MODEL_PATH),
+            minimum_frequency=MIN_FREQ, maximum_frequency=MAX_FREQ,
+        )
     contours = output["contour"]
-    times = model_frames_to_time(contours.shape[0])
+    times = model_frames_to_time(contours.shape[0]) * time_scale
     raw = {}
     for name, (onset, frame) in DENSITIES.items():
         # mesmos passos de basic_pitch.note_creation.model_output_to_notes, mas com os índices
         # de quadro, para calcular a curva fina de afinação de cada nota
-        notes = output_to_notes_polyphonic(
-            output["note"], output["onset"], onset_thresh=onset, frame_thresh=frame,
-            min_note_len=11, infer_onsets=True, max_freq=MAX_FREQ, min_freq=MIN_FREQ, melodia_trick=True,
-        )
+        notes = _decode_notes(output, onset, frame)
         raw[name] = [
             (s, e, int(pitch), float(amp), _fine_curve(contours, s, e, int(pitch)))
-            for s, e, pitch, amp in _merge_splits(notes, output["onset"])
+            for s, e, pitch, amp in notes
         ]
     # Desvio fixo: mediana da afinação das notas. No gabarito sintético (afinado em Lá 440) o
     # basic-pitch dá +0,31 semitom em todas as notas: é viés do modelo, não da música.
@@ -129,6 +225,7 @@ def transcribe(wav_path):
         )
     return {
         "duration": float(librosa.get_duration(path=str(wav_path))),
+        "tuning_cents": round(tuning * 100, 1),
         "notes": density.pop("normal"),
         "density": density,
     }

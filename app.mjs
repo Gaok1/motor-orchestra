@@ -1,12 +1,13 @@
 import { Engine, COLORS } from './engine.mjs';
 import { DEFAULT_PHYSICS, rpmFromPulses } from './physics.mjs';
 import { DEMOS, arrangeMotors, mtof, noteName, parseScore } from './score.mjs';
-import { drawDynamics, drawRoll, drawSpectrum, drawSum, drawVoices } from './charts.mjs';
+import { drawDynamics, drawRoll, drawSpectrum, drawSum, drawTimeline, drawVoices } from './charts.mjs';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
 const ui = new Map(); // motor → elementos do cartão
 let score = null, source = null, job = null, generation = 0;
+let cursor = null; // ponto de partida escolhido com a música parada (s)
 
 const hz = (f) => `${f.toLocaleString('pt-BR', { maximumFractionDigits: f < 100 ? 1 : 0 })} Hz`;
 const clock = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
@@ -117,8 +118,11 @@ $('silence').addEventListener('click', () => engine.motors.forEach((m) => setHol
 // ---------- Partituras ----------
 
 function setScore(next, kind) {
+  // Rearranjar a mesma música mantém o trecho; trocar de música o descarta.
+  if (kind !== 'youtube' || source !== 'youtube') { cursor = null; engine.transport.region = null; }
   score = next;
   source = kind;
+  updateRegionInfo();
   document.querySelectorAll('.chip').forEach((chip) => chip.classList.toggle('on', chip.dataset.source === kind));
   updateScoreInfo();
   if (engine.transport.playing) {
@@ -165,11 +169,12 @@ function useYoutube(select = true) {
   const threshold = Number($('threshold').value);
   const method = $('method').value;
   $('threshold-value').textContent = threshold.toFixed(2);
-  $('threshold-label').hidden = method !== 'papeis';
-  $('density-label').hidden = $('line-options').hidden = method !== 'linhas';
+  $('density-label').hidden = $('line-options').hidden = method === 'papeis';
+  $('reduction-options').hidden = method !== 'melodia';
   setScore(arrangeMotors(job, engine.motors.length, {
     method, threshold, density: $('density').value, percussion: $('percussion').checked,
-    bends: $('bends').checked, mix: $('mix').checked,
+    bends: $('bends').checked, mix: $('mix').checked, continuity: $('continuity').checked,
+    harmony: $('harmony').checked, voicing: $('voicing').checked, double: $('double').checked,
   }), 'youtube');
 }
 $('threshold').addEventListener('change', () => useYoutube(false));
@@ -177,6 +182,10 @@ $('method').addEventListener('change', () => useYoutube(false));
 $('density').addEventListener('change', () => useYoutube(false));
 $('bends').addEventListener('change', () => useYoutube(false));
 $('mix').addEventListener('change', () => useYoutube(false));
+$('continuity').addEventListener('change', () => useYoutube(false));
+$('harmony').addEventListener('change', () => useYoutube(false));
+$('voicing').addEventListener('change', () => useYoutube(false));
+$('double').addEventListener('change', () => useYoutube(false));
 $('percussion').addEventListener('change', () => useYoutube(false));
 $('threshold').addEventListener('input', () => { $('threshold-value').textContent = Number($('threshold').value).toFixed(2); });
 $('original-level').addEventListener('input', (e) => engine.setOriginalLevel(Number(e.target.value)));
@@ -207,6 +216,7 @@ $('link-form').addEventListener('submit', async (event) => {
     setStatus('Carregando o áudio original para comparação...');
     await engine.loadOriginal(`/audio/${result.id}`);
     job = result;
+    source = null; // música nova: descarta o trecho da anterior
     $('youtube-chip').hidden = false;
     $('youtube-chip').textContent = result.title.length > 40 ? `${result.title.slice(0, 40)}…` : result.title;
     $('youtube-controls').hidden = false;
@@ -232,10 +242,108 @@ function syncPlayButton() {
 $('play').addEventListener('click', async () => {
   await audio();
   if (engine.transport.playing) engine.stop();
-  else if (score) engine.play(score, { original: source === 'youtube' });
+  else if (score) engine.play(score, { from: cursor ?? 0, original: source === 'youtube' });
   syncPlayButton();
 });
-$('loop').addEventListener('change', (e) => engine.setLoop(e.target.checked));
+
+// ---------- Trecho selecionado ----------
+
+const MIN_REGION = 0.25; // s
+let drag = null; // { mode: 'new' | 'start' | 'end', x0, t0, region, moved }
+
+function setRegion(region) {
+  engine.setRegion(region);
+  if (region && cursor !== null && (cursor < region.start || cursor >= region.end)) cursor = region.start;
+  updateRegionInfo();
+}
+
+function updateRegionInfo() {
+  const region = engine.transport.region;
+  $('clear-region').hidden = !region;
+  $('region-info').textContent = !score ? ''
+    : region ? `Trecho ${clock(region.start)} – ${clock(Math.min(region.end, score.duration))} · ${(Math.min(region.end, score.duration) - region.start).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} s${$('loop').checked ? ' em loop' : ''}`
+    : 'Arraste na barra acima para tocar só um trecho, ou marque início e fim enquanto a música toca.';
+}
+
+const nowTime = () => engine.songTime() ?? cursor ?? 0;
+
+$('mark-start').addEventListener('click', () => {
+  if (!score) return;
+  const t = nowTime(), old = engine.transport.region;
+  setRegion({ start: t, end: old && old.end - t >= MIN_REGION ? old.end : score.duration });
+});
+$('mark-end').addEventListener('click', () => {
+  if (!score) return;
+  const t = nowTime(), old = engine.transport.region;
+  if (t < MIN_REGION) return;
+  setRegion({ start: old && t - old.start >= MIN_REGION ? old.start : 0, end: t });
+});
+$('clear-region').addEventListener('click', () => setRegion(null));
+
+function timelineAt(event) {
+  const rect = $('timeline').getBoundingClientRect();
+  const x = Math.min(rect.width, Math.max(0, event.clientX - rect.left));
+  return { x, t: (x / rect.width) * score.duration, toX: (t) => (t / score.duration) * rect.width };
+}
+
+// Borda do trecho perto do ponteiro (6 px), para poder ajustá-la arrastando.
+function edgeAt(event) {
+  const region = engine.transport.region;
+  if (!score || !region) return null;
+  const { x, toX } = timelineAt(event);
+  const da = Math.abs(x - toX(region.start)), db = Math.abs(x - toX(region.end));
+  if (Math.min(da, db) > 6) return null;
+  return da <= db ? 'start' : 'end';
+}
+
+$('timeline').addEventListener('pointerdown', (event) => {
+  if (!score || event.button !== 0) return;
+  const { x, t } = timelineAt(event);
+  drag = { mode: edgeAt(event) ?? 'new', x0: x, t0: t, region: engine.transport.region, moved: false };
+  $('timeline').setPointerCapture(event.pointerId);
+});
+$('timeline').addEventListener('pointermove', (event) => {
+  if (!drag) { $('timeline').classList.toggle('edge', Boolean(edgeAt(event))); return; }
+  const { x, t } = timelineAt(event);
+  if (Math.abs(x - drag.x0) > 4) drag.moved = true;
+  if (!drag.moved) return;
+  const old = engine.transport.region;
+  const [a, b] = drag.mode === 'start' ? [t, old.end] : drag.mode === 'end' ? [old.start, t] : [drag.t0, t];
+  drag.region = { start: Math.min(a, b), end: Math.max(a, b) };
+});
+$('timeline').addEventListener('pointerup', async (event) => {
+  if (!drag) return;
+  const { moved, region, t0 } = drag;
+  drag = null;
+  if (moved) {
+    if (region.end - region.start >= MIN_REGION) setRegion(region);
+    return;
+  }
+  await audio();
+  seekTo(t0);
+});
+$('timeline').addEventListener('pointercancel', () => { drag = null; });
+
+// Pula para um ponto. Fora do trecho selecionado, desfaz a seleção.
+function seekTo(t) {
+  const current = engine.transport.region;
+  if (current && (t < current.start || t >= current.end)) setRegion(null);
+  if (engine.transport.playing) engine.seek(t);
+  else cursor = t;
+}
+
+// Slider de posição: enquanto arrasta, só o relógio acompanha; ao soltar, pula.
+let seeking = false;
+$('seek').addEventListener('input', () => {
+  seeking = true;
+  $('clock').textContent = clock(Number($('seek').value));
+});
+$('seek').addEventListener('change', async () => {
+  seeking = false;
+  await audio();
+  seekTo(Number($('seek').value));
+});
+$('loop').addEventListener('change', (e) => { engine.setLoop(e.target.checked); updateRegionInfo(); });
 $('rate').addEventListener('input', (e) => {
   const rate = Number(e.target.value);
   $('rate-value').textContent = `${Math.round(rate * 100)}%`;
@@ -245,6 +353,7 @@ $('volume').addEventListener('input', (e) => { if (engine.master) engine.master.
 document.querySelectorAll('[data-model]').forEach((button) => button.addEventListener('click', async () => {
   await audio();
   engine.setModel(button.dataset.model);
+  $('sound-info').hidden = button.dataset.model !== 'bells';
   document.querySelectorAll('[data-model]').forEach((b) => {
     b.classList.toggle('on', b === button);
     b.setAttribute('aria-checked', String(b === button));
@@ -364,9 +473,19 @@ function frame(nowMs) {
     engine.stop();
     syncPlayButton();
   }
-  drawRoll($('roll'), score, songTime, engine.motors.length);
-  if (updateText) {
-    $('clock').textContent = clock(songTime ?? 0);
+  const region = drag?.moved ? drag.region : engine.transport.region;
+  drawRoll($('roll'), score, songTime, engine.motors.length, region, cursor ?? region?.start);
+  drawTimeline($('timeline'), score, songTime, engine.motors.length, region, cursor);
+  if (score && !seeking) {
+    const at = songTime ?? cursor ?? 0;
+    if ($('seek').max !== String(score.duration)) {
+      $('seek').max = score.duration;
+      $('duration').textContent = clock(score.duration);
+    }
+    $('seek').value = at;
+  }
+  if (updateText && !seeking) {
+    $('clock').textContent = clock(songTime ?? cursor ?? 0);
     updateFormula();
   }
   requestAnimationFrame(frame);

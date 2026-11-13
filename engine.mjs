@@ -4,6 +4,7 @@
 
 import { bentMidi, mtof, noteAt } from './score.mjs';
 import { DEFAULT_PHYSICS, SIM_DT, stepMotor } from './physics.mjs';
+import { Bells } from './bells.mjs';
 
 const LOOKAHEAD = 0.12;
 const HISTORY = 6; // segundos de histórico para os gráficos
@@ -64,7 +65,7 @@ class Motor {
     n.wobble = g(1);
     n.lfo = ctx.createOscillator();
     n.lfoDepth = g(0.18);
-    n.mixB = g(this.engine.model === 'ideal' ? 0 : 1);
+    n.mixB = g(this.engine.model === 'mech' ? 1 : 0);
     n.mech.connect(n.mechEnv);
     n.noise.connect(n.noiseBand).connect(n.noiseGain).connect(n.mechEnv);
     n.mechEnv.connect(n.resonator).connect(n.body).connect(n.wobble).connect(n.mixB);
@@ -75,6 +76,9 @@ class Motor {
     n.analyser.fftSize = 2048;
     n.mixA.connect(n.volume);
     n.mixB.connect(n.volume);
+    n.mixBells = g(this.engine.model === 'bells' ? 1 : 0);
+    n.mixBells.connect(n.volume);
+    this.bells = new Bells(ctx, n.mixBells);
     n.volume.connect(n.analyser);
     n.volume.connect(this.engine.sum);
     for (const source of [n.ideal, n.mech, n.noise, n.lfo]) source.start();
@@ -99,6 +103,7 @@ class Motor {
 
   destroy() {
     if (!this.nodes) return;
+    this.bells.reset(this.engine.ctx.currentTime);
     for (const source of [this.nodes.ideal, this.nodes.mech, this.nodes.noise, this.nodes.lfo]) source.stop();
     this.nodes.volume.disconnect();
   }
@@ -122,6 +127,7 @@ class Motor {
     this.history.push({ t, midi: cmd ? cmd.midi : null, ...s });
     const n = this.nodes, sc = this.sched;
     if (!n) return;
+    if (this.engine.model === 'bells') this.bells.update(cmd, t, this.engine.songTimeAt(t));
 
     // Frequência mecânica: rampas lineares só quando o valor muda de fato.
     const f = Math.max(1, s.w);
@@ -173,7 +179,8 @@ export class Engine {
     this.physics = { ...DEFAULT_PHYSICS };
     this.model = 'mech';
     this.motors = [];
-    this.transport = { playing: false, start: 0, rate: 1, loop: true, score: null };
+    // region: trecho selecionado { start, end } em segundos da música; null = música inteira.
+    this.transport = { playing: false, start: 0, rate: 1, loop: true, score: null, region: null };
     this.original = { buffer: null, source: null, gain: null, level: 0 };
     this.simTime = 0;
   }
@@ -247,15 +254,24 @@ export class Engine {
       const note = songTime !== null && track ? noteAt(track, songTime) : null;
       if (note) return note.bends ? { midi: bentMidi(note, songTime), vel: note.vel, noise: note.noise, reattack: note.reattack, src: note } : note;
     }
-    return motor.hold ? { midi: motor.midi, vel: 0.8 } : null;
+    return motor.hold ? { midi: motor.midi, vel: 0.8, src: `hold:${motor.midi}` } : null;
+  }
+
+  // Trecho tocado: a região selecionada, limitada à duração da partitura.
+  bounds(score = this.transport.score) {
+    const duration = score?.duration ?? 0, region = this.transport.region;
+    if (!region) return [0, duration];
+    const end = Math.min(region.end, duration);
+    return region.start < end ? [region.start, end] : [0, duration];
   }
 
   songTimeAt(t) {
     const tr = this.transport;
     if (!tr.playing) return null;
     const time = Math.max(0, (t - tr.start) * tr.rate);
-    if (tr.loop) return time % tr.score.duration;
-    return time < tr.score.duration ? time : null;
+    const [a, b] = this.bounds();
+    if (time < b) return time;
+    return tr.loop ? a + ((time - a) % (b - a)) : null;
   }
 
   songTime() { return this.ctx ? this.songTimeAt(this.ctx.currentTime) : null; }
@@ -267,6 +283,7 @@ export class Engine {
     const t0 = this.ctx.currentTime + 0.015;
     for (const motor of this.motors) {
       if (!motor.nodes) continue;
+      motor.bells.reset(t0);
       const h = motor.history;
       while (h.length && h[h.length - 1].t >= t0) h.pop();
       motor.state = h.length ? h[h.length - 1] : { w: 0 };
@@ -286,13 +303,16 @@ export class Engine {
   }
 
   setModel(model) {
+    if (model === this.model) return;
     this.model = model;
     const now = this.ctx?.currentTime ?? 0;
     for (const motor of this.motors) {
       if (!motor.nodes) continue;
       motor.nodes.mixA.gain.setTargetAtTime(model === 'ideal' ? 1 : 0, now, 0.02);
-      motor.nodes.mixB.gain.setTargetAtTime(model === 'ideal' ? 0 : 1, now, 0.02);
+      motor.nodes.mixB.gain.setTargetAtTime(model === 'mech' ? 1 : 0, now, 0.02);
+      motor.nodes.mixBells.gain.setTargetAtTime(model === 'bells' ? 1 : 0, now, 0.02);
     }
+    this.resync();
   }
 
   setOriginalLevel(level) {
@@ -311,6 +331,8 @@ export class Engine {
     this.stop(false);
     const tr = this.transport;
     tr.score = score;
+    const [a, b] = this.bounds(score);
+    if (!(from >= a && from < b)) from = a;
     tr.playing = true;
     tr.start = this.ctx.currentTime + 0.05 - from / tr.rate;
     if (original) this.startOriginal(from);
@@ -324,9 +346,38 @@ export class Engine {
     source.buffer = o.buffer;
     source.playbackRate.value = tr.rate;
     source.loop = tr.loop;
-    source.loopEnd = Math.min(o.buffer.duration, tr.score.duration);
+    this.loopOriginal();
     source.connect(o.gain);
     source.start(this.ctx.currentTime + 0.05, from % o.buffer.duration);
+  }
+
+  loopOriginal() {
+    const source = this.original.source;
+    if (!source) return;
+    const [a, b] = this.bounds();
+    source.loopStart = Math.min(a, source.buffer.duration);
+    source.loopEnd = Math.min(b, source.buffer.duration);
+  }
+
+  // Seleciona o trecho a tocar (null = música inteira). Tocando dentro do novo trecho,
+  // a música segue de onde está; fora dele, pula para o início do trecho.
+  setRegion(region) {
+    const tr = this.transport;
+    const pos = tr.playing && this.ctx ? this.songTime() : null;
+    tr.region = region;
+    if (pos === null) return;
+    const [a, b] = this.bounds();
+    if (pos >= a && pos < b) {
+      // Reancora o relógio: sem isso, uma posição já "dobrada" pelo loop antigo cairia em outro lugar.
+      tr.start = this.ctx.currentTime - pos / tr.rate;
+      this.loopOriginal();
+    } else this.play(tr.score, { from: a, original: Boolean(this.original.source) });
+  }
+
+  // Pula para um instante da música sem parar a reprodução.
+  seek(time) {
+    const tr = this.transport;
+    if (tr.playing && this.ctx) this.play(tr.score, { from: time, original: Boolean(this.original.source) });
   }
 
   stop(sync = true) {

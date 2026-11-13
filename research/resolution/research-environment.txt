@@ -1,0 +1,2 @@
+pypdf==7.0.1
+xgboost-cpu==3.4.1
